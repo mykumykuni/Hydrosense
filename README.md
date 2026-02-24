@@ -1,6 +1,6 @@
-HYDROSENSE: Real-Time Water Quality Monitoring System for Milkfish (Chanos chanos) Aquaculture
+HYDROSENSE: Real-Time Water Quality Monitoring System for Milkfish (Chanos chanos) Hatchery
 📌 Project Overview
-HYDROSENSE is an IoT-based solution designed to modernize water quality management in the Philippine aquaculture sector. Specifically focused on Milkfish (Bangus) hatcheries and small-to-medium scale farms, this system addresses the critical gap between traditional manual monitoring and the high-precision requirements of intensive fish farming.
+HYDROSENSE is an IoT-based solution designed to modernize water quality management in the Philippine aquaculture sector. Specifically focused on Milkfish (Bangus) hatcheries, this system addresses the critical gap between traditional manual monitoring and the high-precision requirements for the early life stages of milkfish.
 
 🌏 Context & Industry Background
 Aquaculture has surpassed capture fisheries globally, reaching a milestone of 94.4 million tons in 2022. In the Philippines, aquaculture is a cornerstone of food security, contributing ₱124.02 billion to the economy.
