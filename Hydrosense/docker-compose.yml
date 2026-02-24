@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: hydrosense_app
+    container_name: hydrosense_app
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - hydronet
+    depends_on:
+      - db
+    ports:
+      - "8000:8000" # expose artisan serve port
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=hydrosense
+      - DB_USERNAME=hydro
+      - DB_PASSWORD=secret
+
+  db:
+    image: mysql:8.0
+    container_name: hydrosense_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: hydrosense
+      MYSQL_USER: hydro
+      MYSQL_PASSWORD: secret
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - hydronet
+
+networks:
+  hydronet:
+    driver: bridge
+
+volumes:
+  db_data:
