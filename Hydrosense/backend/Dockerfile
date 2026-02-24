@@ -19,6 +19,9 @@ WORKDIR /var/www/html
 # copy existing application files
 COPY . /var/www/html
 
+# install composer dependencies
+RUN composer install --optimize-autoloader --no-dev
+
 # set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
