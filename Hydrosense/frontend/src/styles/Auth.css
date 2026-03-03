@@ -1,0 +1,104 @@
+/* ROOT LAYOUT */
+.app-container {
+  display: flex !important;
+  width: 100vw;
+  height: 100vh;
+  flex-direction: row;
+}
+
+/* LEFT PANEL (Branding) */
+.water-header {
+  flex: 0 0 40%;
+  background: linear-gradient(135deg, #001f3f 0%, #004e92 100%);
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--glass-border);
+}
+
+.brand-tag { font-size: 0.8rem; letter-spacing: 3px; color: var(--safe-green); font-weight: 800; margin-bottom: 10px; }
+.brand-name { font-weight: 900; font-size: 2.8rem; margin-bottom: 20px; line-height: 1; }
+.project-sub { font-size: 1rem; opacity: 0.7; line-height: 1.6; border-left: 3px solid var(--safe-green); padding-left: 20px; }
+
+/* RIGHT PANEL (Form Section) */
+.form-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* NEW: Milkfish Hatchery Tank Background */
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+              url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2070') center/cover;
+}
+
+/* THE LIQUID GLASS CARD */
+.glass-card {
+  width: 100%;
+  max-width: 450px;
+  padding: 50px;
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* LOGIN FORM SPECIFICS */
+.login-header { margin-bottom: 30px; text-align: left; }
+.login-header h2 { font-weight: 900; fontSize: 1.8rem; }
+.login-header p { opacity: 0.6; fontSize: 0.9rem; }
+
+/* REGISTER LINK BUTTON */
+.register-link-btn {
+  all: unset !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  margin-top: 20px !important;
+  color: var(--bangus-silver) !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  cursor: pointer !important;
+}
+
+.register-link-btn:hover { 
+  color: var(--safe-green) !important;
+  background: rgba(46, 204, 113, 0.05) !important;
+  border-radius: 8px;
+}
+
+/* --- REGISTER/BACK BUTTON RESTORATION --- */
+.register-link-btn {
+  display: block !important;
+  width: 100% !important;
+  margin-top: 25px !important;
+  padding: 15px !important;
+  
+  /* Resetting defaults without killing the button */
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  
+  /* Text Styling */
+  color: var(--bangus-silver) !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  text-align: center !important;
+  
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.register-link-btn:hover {
+  background: rgba(46, 204, 113, 0.1) !important; /* Slight green glow */
+  border-color: var(--safe-green) !important;
+  color: var(--safe-green) !important;
+  transform: translateY(-2px);
+}

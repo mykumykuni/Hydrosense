@@ -1,34 +1,25 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import './styles/Global.css';
+import './styles/Auth.css';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp'; // Ensure this is imported
+import Dashboard from './pages/Dashboard';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
-
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        <Route
-          path="/"
-          element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login onLogin={handleLogin} />}
-        />
-        <Route
-          path="/dashboard"
-          element={isLoggedIn ? <Dashboard onLogout={handleLogout} /> : <Navigate to="/" />}
-        />
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        
+        {/* ADD THIS ROUTE BELOW */}
+        <Route path="/signup" element={<SignUp />} />
+        
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
