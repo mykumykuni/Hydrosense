@@ -57,6 +57,10 @@ module.exports = async (req, res) => {
     const search = req.query?.search || '';
     const operators = listOperators(state, search);
     const pendingCount = operators.filter((user) => user.status === 'pending').length;
+    
+    console.log(`[OPERATORS:GET] Found ${operators.length} operators (${pendingCount} pending)`);
+    console.log(`[OPERATORS:GET] Total users in state: ${state.users.length}, Operators: ${state.users.filter(u => u.role === 'operator').length}`);
+    
     await saveState(state);
     res.status(200).send(JSON.stringify({ ok: true, operators, pendingCount }));
     return;

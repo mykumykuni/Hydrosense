@@ -37,12 +37,17 @@ module.exports = async (req, res) => {
   if (action === 'register') {
     const result = registerOperator(state, body.payload || {});
     state.updatedAt = Date.now();
-    await saveState(state);
-
+    
     if (!result.ok) {
+      console.log(`[AUTH:REGISTER] ✗ Registration failed: ${result.error}`);
       res.status(400).send(JSON.stringify({ ok: false, error: result.error }));
       return;
     }
+
+    console.log(`[AUTH:REGISTER] ✓ Registered ${result.user.email} as operator. Total users now: ${state.users.length}`);
+    
+    const saved = await saveState(state);
+    console.log(`[AUTH:REGISTER] State saved. Now have ${saved.users.filter(u => u.role === 'operator').length} operators in storage`);
 
     res.status(200).send(JSON.stringify({
       ok: true,
