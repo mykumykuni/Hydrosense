@@ -5,6 +5,14 @@ React client for Hydrosense live monitoring and operations dashboard.
 ## Run Locally
 
 ```bash
+cd Hydrosense
+npm install
+npm run dev
+```
+
+Or run frontend directly:
+
+```bash
 cd frontend
 npm install
 npm start
@@ -33,6 +41,9 @@ It reads/writes shared state through backend API:
 
 - `GET /api/state` - fetch latest shared state
 - `POST /api/state` - apply mutations/actions
+- `POST /api/auth` - register/login
+- `GET/PATCH /api/profile` - operator profile retrieval/update
+- `GET/POST /api/operators` - admin operator management
 
 ## Authentication and Access
 
@@ -41,11 +52,13 @@ It reads/writes shared state through backend API:
 - Operator login requires admin approval
 - Dashboard routes are protected by session token in local storage
 
-Optional admin seed (set on backend environment):
+Default seeded admin account:
+- `admin.hydrosense@gmail.com`
+- `admin@123`
+
+Override admin seed (set on backend environment):
 - `HYDROSENSE_ADMIN_EMAIL`
 - `HYDROSENSE_ADMIN_PASSWORD`
-
-If not set, no default admin account is auto-created.
 
 ### Shared Across Roles
 
@@ -79,6 +92,8 @@ REACT_APP_API_BASE=
 
 Leave empty for same-origin API (`/api/state`).
 
+For most local and production setups, keep `REACT_APP_API_BASE` empty so requests use same-origin `/api/*` routes.
+
 ## Dashboard Routes
 
 - `/dashboard/live`
@@ -92,6 +107,7 @@ Main orchestrator: `src/pages/Dashboard.js`
 Deploy from repository root so frontend + root API are included:
 
 ```bash
+cd C:\Windows\System32\Hydrosense
 npm run vercel:deploy
 ```
 

@@ -5,7 +5,8 @@ Hydrosense runs a React frontend with a Vercel serverless backend API for shared
 ## Architecture
 
 - `frontend/` - React client UI
-- `api/state.js` - Vercel serverless API endpoint (`GET/POST /api/state`)
+- Root `api/` wrappers - Vercel function entrypoints
+- `Hydrosense/api/*.js` - API handler implementations
 - `backend/database/` - backend data/state engine and persistence modules
 
 The database/state folder is intentionally outside `frontend/`.
@@ -48,13 +49,18 @@ Fallback persistence:
 
 ## Local Development
 
-Frontend:
+Start local development:
 
 ```bash
-cd frontend
+cd Hydrosense
 npm install
-npm start
+npm run dev
 ```
+
+- App URL: `http://localhost:3000`
+- API base: same-origin (`/api/*`)
+
+Legacy Docker/Laravel scripts are retained only as placeholders and are not part of the active Vercel API architecture.
 
 Build from repo root:
 
@@ -67,9 +73,14 @@ npm run vercel-build
 Always deploy from repository root so both frontend output and API functions are included:
 
 ```bash
+cd C:\Windows\System32\Hydrosense
 npm run vercel:link
 npm run vercel:deploy
 ```
+
+Project settings for Vercel root deployment:
+- Build command: `npm run vercel-build`
+- Output directory: `Hydrosense/frontend/build`
 
 ## Domains
 
@@ -89,8 +100,10 @@ Note: custom `*.vercel.app` aliases are limited to namespaces owned by your Verc
 - `GET /api/operators` (authenticated admin only)
 - `POST /api/operators` actions: `approve_operator`, `deactivate_operator`, `reactivate_operator`
 
-Optional admin seed via environment variables:
+Default seeded admin credentials:
+- Email: `admin.hydrosense@gmail.com`
+- Password: `admin@123`
+
+Override admin seed via environment variables:
 - `HYDROSENSE_ADMIN_EMAIL`
 - `HYDROSENSE_ADMIN_PASSWORD`
-
-If these env vars are not provided, no default admin account is auto-created.

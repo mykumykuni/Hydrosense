@@ -6,12 +6,12 @@
     "node": ">=20 <25"
   },
   "scripts": {
-    "dev": "docker-compose up -d && cd frontend && npm start",
-    "dev:install": "docker-compose up -d && cd frontend && npm install && npm start",
-    "backend:start": "docker-compose up -d",
-    "backend:stop": "docker-compose down",
-    "backend:logs": "docker-compose logs -f app",
-    "backend:migrate": "docker-compose exec app php artisan migrate",
+    "dev": "cd frontend && npm start",
+    "dev:install": "cd frontend && npm install && npm start",
+    "backend:start": "echo Legacy Docker backend is not part of the current Vercel API architecture.",
+    "backend:stop": "echo Legacy Docker backend is not part of the current Vercel API architecture.",
+    "backend:logs": "echo Legacy Docker backend is not part of the current Vercel API architecture.",
+    "backend:migrate": "echo Legacy Docker backend is not part of the current Vercel API architecture.",
     "frontend:install": "cd frontend && npm install",
     "frontend:start": "cd frontend && npm start",
     "frontend:build": "cd frontend && npm run build",
