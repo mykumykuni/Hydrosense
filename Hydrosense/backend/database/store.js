@@ -46,7 +46,7 @@ const readFromKv = async () => {
   }
 
   try {
-    console.log('[STORE:KV] Reading state from KV...');
+    console.log('[STORE:KV] Reading state from Redis...');
     const data = await fetchJsonSafe(`${kvBaseUrl}/get/${encodeURIComponent(kvStateKey)}`, {
       method: 'GET',
       headers: {
@@ -55,29 +55,29 @@ const readFromKv = async () => {
     });
 
     if (!data) {
-      console.log('[STORE:KV] No KV response received (may be first-time deploy)');
+      console.log('[STORE:KV] No data received from Redis (new deployment?)');
       return null;
     }
 
     if (typeof data.result !== 'string') {
-      console.warn('[STORE:KV] KV result is not a string:', typeof data.result);
+      console.warn('[STORE:KV] Redis result is not a string, got:', typeof data.result);
       return null;
     }
 
     try {
       const parsed = JSON.parse(data.result);
       if (parsed && typeof parsed === 'object') {
-        console.log('[STORE:KV] ✓ Read successful, loaded state');
+        console.log('[STORE:KV] ✓ Successfully parsed state from Redis');
         return parsed;
       }
-      console.warn('[STORE:KV] Parsed KV result is not an object');
+      console.warn('[STORE:KV] Parsed Redis result is not an object');
       return null;
     } catch (parseErr) {
-      console.error('[STORE:KV] Failed to parse KV result:', parseErr.message);
+      console.error('[STORE:KV] Failed to parse Redis result as JSON:', parseErr.message);
       return null;
     }
   } catch (err) {
-    console.error('[STORE:KV] Read failed:', err.message);
+    console.error('[STORE:KV] Read exception:', err.message);
     return null;
   }
 };
@@ -90,26 +90,29 @@ const writeToKv = async (state) => {
 
   try {
     const stateSize = JSON.stringify(state).length;
-    console.log(`[STORE:KV] Attempting to write state (${stateSize} bytes) to Redis...`);
+    console.log(`[STORE:KV] Attempting to persist ${stateSize} bytes to Redis...`);
     
     const data = await fetchJsonSafe(`${kvBaseUrl}/set/${encodeURIComponent(kvStateKey)}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${kvToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'text/plain'
       },
       body: JSON.stringify(state)
     });
 
     if (data && data.result === 'OK') {
-      console.log('[STORE:KV] ✓ Write successful');
+      console.log('[STORE:KV] ✓ State persisted to Redis successfully');
       return true;
     } else {
-      console.warn('[STORE:KV] ✗ Write returned unexpected response:', JSON.stringify(data).substring(0, 200));
+      const responseStr = data ? JSON.stringify(data).substring(0, 300) : 'null';
+      console.error('[STORE:KV] ✗ Redis write failed. Response:', responseStr);
+      console.error('[STORE:KV] Expected result "OK", got:', data?.result);
       return false;
     }
   } catch (err) {
     console.error('[STORE:KV] ✗ Write exception:', err.message);
+    console.error('[STORE:KV] Stack:', err.stack);
     return false;
   }
 };
