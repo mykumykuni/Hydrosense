@@ -8,7 +8,7 @@ const kvToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_
 const kvStateKey = 'hydrosense:state:v1';
 let memoryState = null;
 let memoryStateLastUpdatedAt = 0;
-const MEMORY_CACHE_TTL_MS = 5 * 1000; // Refresh from KV every 5 seconds
+const MEMORY_CACHE_TTL_MS = 1 * 1000; // Refresh from KV every 1 second (was 5)
 
 // Log KV config status once at startup
 if (!kvBaseUrl || !kvToken) {
@@ -181,6 +181,11 @@ const getState = async () => {
   return deepClone(memoryState);
 };
 
+const invalidateCache = () => {
+  console.log('[STORE] invalidateCache: Clearing memory cache to force KV refresh');
+  memoryStateLastUpdatedAt = 0;
+};
+
 const saveState = async (nextState) => {
   const userCount = (nextState.users || []).length;
   const operatorCount = (nextState.users || []).filter(u => u.role === 'operator').length;
@@ -204,5 +209,6 @@ const saveState = async (nextState) => {
 
 module.exports = {
   getState,
-  saveState
+  saveState,
+  invalidateCache
 };
