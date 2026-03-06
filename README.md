@@ -1,4 +1,10 @@
 HYDROSENSE: Real-Time Water Quality Monitoring System for Milkfish (Chanos chanos) Hatchery
+
+Backend status notice:
+The backend folder under `Hydrosense/backend` has been intentionally removed.
+Reason: the previous backend setup was unstable and repeatedly failed during Docker startup.
+Current repository focus is frontend-only until a new backend is rebuilt from a clean baseline.
+
 📌 Project Overview
 HYDROSENSE is an IoT-based solution designed to modernize water quality management in the Philippine aquaculture sector. Specifically focused on Milkfish (Bangus) hatcheries, this system addresses the critical gap between traditional manual monitoring and the high-precision requirements for the early life stages of milkfish.
 
