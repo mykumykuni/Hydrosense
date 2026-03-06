@@ -15,6 +15,7 @@ import DashboardMobileTabs from './dashboard/DashboardMobileTabs';
 import { clearAuthSession, getAuthToken, getAuthUser } from '../utils/authStorage';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useProfileAndOperators } from '../hooks/useProfileAndOperators';
+import { getApiBase } from '../utils/apiBase';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ const Dashboard = () => {
   const role = initialAuthUser?.role || 'operator';
   const isAdmin = role === 'admin';
   const currentPage = location.pathname.split('/')[2] || 'live';
-  const API_BASE = process.env.REACT_APP_API_BASE || '';
+  const API_BASE = getApiBase();
 
   const sensorRefs = useRef({});
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Auth.css';
 import { setAuthSession } from '../utils/authStorage';
+import { getApiBase } from '../utils/apiBase';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const Login = () => {
   const [error, setError] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const API_BASE = process.env.REACT_APP_API_BASE || '';
+  const API_BASE = getApiBase();
 
   const errorMap = {
     missing_fields: 'Please enter email and password.',

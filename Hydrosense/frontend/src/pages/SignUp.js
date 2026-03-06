@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Auth.css';
+import { getApiBase } from '../utils/apiBase';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const SignUp = () => {
   const [error, setError] = React.useState('');
   const [success, setSuccess] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const API_BASE = process.env.REACT_APP_API_BASE || '';
+  const API_BASE = getApiBase();
 
   const errorMap = {
     missing_fields: 'Please complete all required fields.',
