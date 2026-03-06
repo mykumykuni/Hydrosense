@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Water management system with React frontend and Laravel backend",
   "engines": {
-    "node": "20.x"
+    "node": ">=20 <25"
   },
   "scripts": {
     "dev": "docker-compose up -d && cd frontend && npm start",
