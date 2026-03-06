@@ -1,6 +1,7 @@
 const { getState, saveState } = require('../backend/database/store');
 const { advanceState } = require('../backend/database/engine');
 const { applyAction } = require('../backend/database/actions');
+const { ensureAdminSeed, getAuthenticatedUser } = require('../backend/database/auth');
 
 const parseBody = (req) => {
   if (!req.body) return {};
@@ -40,13 +41,21 @@ module.exports = async (req, res) => {
   }
 
   let state = await getState();
+  ensureAdminSeed(state);
   state = advanceState(state);
 
   if (req.method === 'POST') {
     const body = parseBody(req);
     const action = String(body.action || '');
     const payload = body.payload || {};
-    const role = body.role === 'admin' ? 'admin' : 'operator';
+    const auth = getAuthenticatedUser(state, req);
+    if (!auth.ok) {
+      await saveState(state);
+      res.status(401).send(JSON.stringify({ ok: false, error: auth.error }));
+      return;
+    }
+
+    const role = auth.user.role === 'admin' ? 'admin' : 'operator';
 
     if (action) {
       state = applyAction(state, action, payload, role);

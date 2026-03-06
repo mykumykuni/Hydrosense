@@ -16,6 +16,9 @@ The database/state folder is intentionally outside `frontend/`.
 - Admin-only control actions enforced server-side
 - Shared alerts and history window controls
 - Real-time simulation and alerts generated in backend engine
+- Backend-enforced authentication with hashed passwords and session tokens
+- Operator registration requires admin approval before login
+- Operator profile management (photo + details) and admin operator moderation
 
 ## Persistence
 
@@ -62,3 +65,15 @@ Also configured:
 - `https://www.hydrosense.app`
 
 Note: custom `*.vercel.app` aliases are limited to namespaces owned by your Vercel account.
+
+## Auth/API Endpoints
+
+- `POST /api/auth` with `action: register | login`
+- `GET /api/profile` (authenticated)
+- `PATCH /api/profile` (authenticated operator only)
+- `GET /api/operators` (authenticated admin only)
+- `POST /api/operators` actions: `approve_operator`, `deactivate_operator`, `reactivate_operator`
+
+Default seeded admin credentials (change with env vars in production):
+- Email: `admin@hydrosense.app`
+- Password: `Admin@12345`

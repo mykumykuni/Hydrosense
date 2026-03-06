@@ -1,16 +1,59 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Auth.css';
+import { setAuthSession } from '../utils/authStorage';
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const handleLoginSubmit = (e) => {
+  const API_BASE = process.env.REACT_APP_API_BASE || '';
+
+  const errorMap = {
+    missing_fields: 'Please enter email and password.',
+    invalid_credentials: 'Email or password is incorrect.',
+    pending_approval: 'Registration pending admin approval.',
+    deactivated: 'Your account is deactivated. Contact admin.',
+    invalid_token: 'Session expired. Please login again.'
+  };
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    const inferredRole = email.toLowerCase().includes('admin') ? 'admin' : 'operator';
-    localStorage.setItem('hydrosenseRole', inferredRole);
-    navigate('/dashboard');
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'login',
+          payload: {
+            email,
+            password
+          }
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        setError(errorMap[data.error] || 'Unable to login right now.');
+        return;
+      }
+
+      setAuthSession({ token: data.token, user: data.user });
+      navigate('/dashboard/live');
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -46,10 +89,25 @@ const Login = () => {
 
             <div style={{ marginBottom: '30px' }}>
               <label className="input-label">Terminal Password</label>
-              <input className="input-field" type="password" placeholder="••••••••" required />
+              <input
+                className="input-field"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
 
-            <button type="submit" className="btn-solid">Initialize Session</button>
+            {error && <p className="project-sub" style={{ color: '#de8a7f', marginBottom: '14px' }}>{error}</p>}
+
+            <button type="submit" className="btn-solid" disabled={isSubmitting}>
+              {isSubmitting ? 'Signing In...' : 'Initialize Session'}
+            </button>
+
+            <p className="project-sub" style={{ marginTop: '14px', fontSize: '13px' }}>
+              Default admin seed: <strong>admin@hydrosense.app</strong> / <strong>Admin@12345</strong>
+            </p>
             
             <button type="button" className="register-link-btn" onClick={() => navigate('/signup')}>
               Register New Operator

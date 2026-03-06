@@ -42,6 +42,8 @@ const createRealtimeState = () => {
       lastTickAt: Date.now(),
       initialized: false
     },
+    users: [],
+    sessions: {},
     updatedAt: Date.now()
   };
 };

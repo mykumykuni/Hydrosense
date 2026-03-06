@@ -34,6 +34,17 @@ It reads/writes shared state through backend API:
 - `GET /api/state` - fetch latest shared state
 - `POST /api/state` - apply mutations/actions
 
+## Authentication and Access
+
+- Login is backend-validated (`POST /api/auth`, action `login`)
+- Registration is backend-validated (`POST /api/auth`, action `register`)
+- Operator login requires admin approval
+- Dashboard routes are protected by session token in local storage
+
+Default seeded admin account:
+- `admin@hydrosense.app`
+- `Admin@12345`
+
 ### Shared Across Roles
 
 - Sensor values
@@ -45,6 +56,16 @@ It reads/writes shared state through backend API:
 
 - `admin`: can update thresholds/history and perform admin alert actions
 - `operator`: read-focused, can mark/read/report issue actions allowed by backend
+
+## Profile and Operator Management
+
+- Operator page: `/dashboard/profile`
+	- Edit display name, phone, address, bio, position, emergency contact
+	- Upload photo (stored as base64 in backend state)
+- Admin page: `/dashboard/operators`
+	- View all operators and pending registrations
+	- Search by name/email
+	- Approve, deactivate, and reactivate operators
 
 ## Optional Environment Variable
 

@@ -7,6 +7,9 @@ import OperationsSectionAdmin from './dashboard/sections/OperationsSectionAdmin'
 import OperationsSectionOperator from './dashboard/sections/OperationsSectionOperator';
 import AlertsPageSection from './dashboard/sections/AlertsPageSection';
 import AlertModal from './dashboard/AlertModal';
+import ProfileSection from './dashboard/sections/ProfileSection';
+import OperatorManagementSection from './dashboard/sections/OperatorManagementSection';
+import { clearAuthSession, getAuthToken, getAuthUser, setAuthSession } from '../utils/authStorage';
 
 const limits = {
   do: { min: 4.0, max: 9.0, critical: 1.4, unit: 'mg/L', label: 'Dissolved Oxygen' },
@@ -50,6 +53,25 @@ const Dashboard = () => {
   const [historyWindow, setHistoryWindow] = useState(DEFAULT_HISTORY_POINTS);
   const [alertLog, setAlertLog] = useState([]);
   const [syncState, setSyncState] = useState('connecting');
+  const [authToken] = useState(() => getAuthToken());
+  const [authUser, setAuthUser] = useState(() => getAuthUser());
+  const [profileDraft, setProfileDraft] = useState({
+    displayName: '',
+    photoDataUrl: '',
+    phone: '',
+    address: '',
+    bio: '',
+    position: '',
+    emergencyContact: ''
+  });
+  const [profileSaveError, setProfileSaveError] = useState('');
+  const [profileSaveMessage, setProfileSaveMessage] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [operators, setOperators] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [operatorSearch, setOperatorSearch] = useState('');
+  const [operatorError, setOperatorError] = useState('');
+  const [operatorsLoading, setOperatorsLoading] = useState(false);
 
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertFilter, setAlertFilter] = useState('all');
@@ -61,6 +83,17 @@ const Dashboard = () => {
   const isAdmin = role === 'admin';
   const currentPage = location.pathname.split('/')[2] || 'live';
   const API_BASE = process.env.REACT_APP_API_BASE || '';
+
+  useEffect(() => {
+    if (!authToken || !authUser) {
+      navigate('/login');
+    }
+  }, [authToken, authUser, navigate]);
+
+  const getAuthHeaders = useCallback(() => ({
+    Authorization: `Bearer ${authToken}`,
+    Accept: 'application/json'
+  }), [authToken]);
 
   const applyServerState = useCallback((payload) => {
     if (!payload || typeof payload !== 'object') return;
@@ -92,10 +125,10 @@ const Dashboard = () => {
       const response = await fetch(`${API_BASE}/api/state`, {
         method: 'POST',
         headers: {
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
-          Accept: 'application/json'
         },
-        body: JSON.stringify({ action, payload, role })
+        body: JSON.stringify({ action, payload })
       });
       if (!response.ok) throw new Error('Action failed');
       const data = await response.json();
@@ -103,7 +136,110 @@ const Dashboard = () => {
     } catch {
       setSyncState('offline');
     }
-  }, [API_BASE, applyServerState, role]);
+  }, [API_BASE, applyServerState, getAuthHeaders]);
+
+  const loadProfile = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/profile`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) return;
+
+      setAuthUser(data.user);
+      setAuthSession({ token: authToken, user: data.user });
+      setProfileDraft({
+        displayName: data.user.profile?.displayName || '',
+        photoDataUrl: data.user.profile?.photoDataUrl || '',
+        phone: data.user.profile?.phone || '',
+        address: data.user.profile?.address || '',
+        bio: data.user.profile?.bio || '',
+        position: data.user.profile?.position || '',
+        emergencyContact: data.user.profile?.emergencyContact || ''
+      });
+    } catch {
+      // No-op on profile load failures.
+    }
+  }, [API_BASE, authToken, getAuthHeaders]);
+
+  const saveProfile = async () => {
+    setProfileSaveError('');
+    setProfileSaveMessage('');
+    setProfileSaving(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/profile`, {
+        method: 'PATCH',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ payload: profileDraft })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        setProfileSaveError(data.error || 'Unable to save profile.');
+        return;
+      }
+
+      setAuthUser(data.user);
+      setAuthSession({ token: authToken, user: data.user });
+      setProfileSaveMessage('Profile updated successfully.');
+    } catch {
+      setProfileSaveError('Network error while saving profile.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const loadOperators = useCallback(async (search = '') => {
+    setOperatorsLoading(true);
+    setOperatorError('');
+
+    try {
+      const query = search ? `?search=${encodeURIComponent(search)}` : '';
+      const response = await fetch(`${API_BASE}/api/operators${query}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        setOperatorError(data.error || 'Unable to load operators.');
+        return;
+      }
+
+      setOperators(data.operators || []);
+      setPendingCount(data.pendingCount || 0);
+    } catch {
+      setOperatorError('Network error while loading operators.');
+    } finally {
+      setOperatorsLoading(false);
+    }
+  }, [API_BASE, getAuthHeaders]);
+
+  const mutateOperator = async (action, userId) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/operators`, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action, payload: { userId } })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        setOperatorError(data.error || 'Unable to update operator.');
+        return;
+      }
+      setOperators(data.operators || []);
+      setPendingCount(data.pendingCount || 0);
+    } catch {
+      setOperatorError('Network error while updating operator.');
+    }
+  };
 
   useEffect(() => {
     fetchServerState();
@@ -116,6 +252,22 @@ const Dashboard = () => {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     };
   }, [fetchServerState]);
+
+  useEffect(() => {
+    if (!authToken) return;
+    loadProfile();
+    if (isAdmin) {
+      loadOperators('');
+    }
+  }, [authToken, isAdmin, loadOperators, loadProfile]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const timer = setTimeout(() => {
+      loadOperators(operatorSearch);
+    }, 260);
+    return () => clearTimeout(timer);
+  }, [isAdmin, operatorSearch, loadOperators]);
 
   const getRange = (key) => thresholds[key] || { min: limits[key].min, max: limits[key].max };
 
@@ -294,8 +446,46 @@ const Dashboard = () => {
       />
     );
 
+  const profileSection = (
+    <ProfileSection
+      profile={profileDraft}
+      onChange={(field, value) => setProfileDraft((prev) => ({ ...prev, [field]: value }))}
+      onPhotoChange={(e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          setProfileDraft((prev) => ({ ...prev, photoDataUrl: String(reader.result || '') }));
+        };
+        reader.readAsDataURL(file);
+      }}
+      onSave={saveProfile}
+      isSaving={profileSaving}
+      saveMessage={profileSaveMessage}
+      saveError={profileSaveError}
+    />
+  );
+
+  const operatorsSection = (
+    <OperatorManagementSection
+      operators={operators}
+      pendingCount={pendingCount}
+      search={operatorSearch}
+      onSearch={setOperatorSearch}
+      onApprove={(userId) => mutateOperator('approve_operator', userId)}
+      onDeactivate={(userId) => mutateOperator('deactivate_operator', userId)}
+      onReactivate={(userId) => mutateOperator('reactivate_operator', userId)}
+      error={operatorError}
+      loading={operatorsLoading}
+    />
+  );
+
   const pageContent = currentPage === 'operations'
     ? utilitySection
+    : currentPage === 'profile'
+      ? profileSection
+      : currentPage === 'operators'
+        ? operatorsSection
     : currentPage === 'alerts'
       ? (
         <AlertsPageSection
@@ -356,6 +546,22 @@ const Dashboard = () => {
           >
             {isAdmin ? 'Compliance Console' : 'Incident Reporting'}
           </div>
+          {!isAdmin && (
+            <div
+              className={`workspace-nav-item ${currentPage === 'profile' ? 'active' : ''}`}
+              onClick={() => navigate('/dashboard/profile')}
+            >
+              My Profile
+            </div>
+          )}
+          {isAdmin && (
+            <div
+              className={`workspace-nav-item ${currentPage === 'operators' ? 'active' : ''}`}
+              onClick={() => navigate('/dashboard/operators')}
+            >
+              Operator Profiles
+            </div>
+          )}
         </nav>
       </aside>
 
@@ -372,7 +578,7 @@ const Dashboard = () => {
           </div>
           <div className="topbar-actions">
             <div className={`uptime-widget topbar-fixed role-widget role-chip-display ${isAdmin ? 'admin' : 'operator'}`}>
-              <span className="mini-label">Role: {isAdmin ? 'Admin' : 'Operator'}</span>
+              <span className="mini-label">{authUser?.profile?.displayName || (isAdmin ? 'Admin' : 'Operator')}</span>
             </div>
             <button className="btn-secondary topbar-fixed theme-btn" onClick={() => setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))}>
               {themeMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
@@ -386,7 +592,15 @@ const Dashboard = () => {
                 Export Alerts
               </button>
             )}
-            <button className="btn-secondary topbar-fixed logout-btn" onClick={() => { localStorage.removeItem('hydrosenseRole'); navigate('/login'); }}>Logout</button>
+            <button
+              className="btn-secondary topbar-fixed logout-btn"
+              onClick={() => {
+                clearAuthSession();
+                navigate('/login');
+              }}
+            >
+              Logout
+            </button>
           </div>
         </header>
 
@@ -394,6 +608,8 @@ const Dashboard = () => {
           <button type="button" className={`mobile-tab-btn ${currentPage === 'live' ? 'active' : ''}`} onClick={() => navigate('/dashboard/live')}>Live</button>
           <button type="button" className={`mobile-tab-btn ${currentPage === 'operations' ? 'active' : ''}`} onClick={() => navigate('/dashboard/operations')}>Ops</button>
           <button type="button" className={`mobile-tab-btn ${currentPage === 'alerts' ? 'active' : ''}`} onClick={() => navigate('/dashboard/alerts')}>Alerts</button>
+          {!isAdmin && <button type="button" className={`mobile-tab-btn ${currentPage === 'profile' ? 'active' : ''}`} onClick={() => navigate('/dashboard/profile')}>Profile</button>}
+          {isAdmin && <button type="button" className={`mobile-tab-btn ${currentPage === 'operators' ? 'active' : ''}`} onClick={() => navigate('/dashboard/operators')}>Users</button>}
         </div>
 
         <div className="dashboard-page-content">{pageContent}</div>
