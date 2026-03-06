@@ -25,9 +25,16 @@ const hasKvConfig = () => Boolean(kvBaseUrl && kvToken);
 const fetchJsonSafe = async (url, options) => {
   try {
     const response = await fetch(url, options);
-    if (!response.ok) return null;
-    return await response.json();
-  } catch {
+    console.log(`[FETCH] ${options.method} ${url.substring(0, 50)}... → ${response.status}`);
+    if (!response.ok) {
+      console.warn(`[FETCH] Response not OK: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    const json = await response.json();
+    console.log(`[FETCH] Parsed JSON successfully`);
+    return json;
+  } catch (err) {
+    console.error(`[FETCH] Error: ${err.message}`);
     return null;
   }
 };
@@ -83,14 +90,13 @@ const writeToKv = async (state) => {
 
   try {
     const stateSize = JSON.stringify(state).length;
-    console.log(`[STORE:KV] Writing state (${stateSize} bytes) to KV...`);
+    console.log(`[STORE:KV] Attempting to write state (${stateSize} bytes) to Redis...`);
     
-    // Use POST body to avoid URL-length issues when state payload grows.
     const data = await fetchJsonSafe(`${kvBaseUrl}/set/${encodeURIComponent(kvStateKey)}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${kvToken}`,
-        'Content-Type': 'text/plain'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(state)
     });
@@ -99,11 +105,11 @@ const writeToKv = async (state) => {
       console.log('[STORE:KV] ✓ Write successful');
       return true;
     } else {
-      console.warn('[STORE:KV] ✗ Write returned unexpected response:', data);
+      console.warn('[STORE:KV] ✗ Write returned unexpected response:', JSON.stringify(data).substring(0, 200));
       return false;
     }
   } catch (err) {
-    console.error('[STORE:KV] ✗ Write failed:', err.message);
+    console.error('[STORE:KV] ✗ Write exception:', err.message);
     return false;
   }
 };
