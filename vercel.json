@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "echo Install handled by build",
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "Hydrosense/frontend/build",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/Hydrosense/api/$1"
+    }
+  ]
+}
