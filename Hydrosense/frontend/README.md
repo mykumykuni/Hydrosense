@@ -52,6 +52,22 @@ Role is inferred at login and stored in local storage key `hydrosenseRole`.
 - Can export alerts to CSV
 - Can edit per-sensor min/max thresholds in Admin Threshold Manager
 
+## Realtime Sync (Admin and Operator)
+
+Sensor values, thresholds, alert states, and history window are now shared realtime.
+
+- Default mode: local shared sync (same browser/device tabs)
+- Supabase mode: cross-device realtime sync (admin and operator on different devices)
+
+To enable cross-device sync, create `frontend/.env` from `frontend/.env.example` and set:
+
+```bash
+REACT_APP_SUPABASE_URL=your_supabase_project_url
+REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Without those env vars, the app still runs using local shared mode.
+
 ## Dashboard Code Structure
 
 Main container/orchestrator:

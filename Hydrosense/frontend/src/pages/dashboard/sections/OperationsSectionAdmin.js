@@ -1,7 +1,17 @@
 import React from 'react';
 import WaterLevelSection from './WaterLevelSection';
 
-const OperationsSectionAdmin = ({ sensors, limits, activeThresholdAlerts, alertLog, sensorKeys, getRange, updateThreshold }) => {
+const OperationsSectionAdmin = ({
+  sensors,
+  limits,
+  activeThresholdAlerts,
+  alertLog,
+  sensorKeys,
+  getRange,
+  updateThreshold,
+  historyWindow,
+  updateHistoryWindow
+}) => {
   return (
     <section className="operations-grid">
       <article className="analysis-card utility-card">
@@ -50,6 +60,18 @@ const OperationsSectionAdmin = ({ sensors, limits, activeThresholdAlerts, alertL
 
       <article className="analysis-card utility-card threshold-card">
         <h3 className="mini-label">Admin Threshold Manager</h3>
+        <div className="threshold-row" style={{ marginBottom: '10px' }}>
+          <span className="threshold-label">History Window (points)</span>
+          <input
+            className="threshold-input"
+            type="number"
+            min="12"
+            max="180"
+            step="1"
+            value={historyWindow}
+            onChange={(e) => updateHistoryWindow(Number(e.target.value))}
+          />
+        </div>
         <div className="threshold-grid">
           {sensorKeys.map((key) => (
             <div key={`threshold-${key}`} className="threshold-row">

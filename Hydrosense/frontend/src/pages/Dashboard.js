@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
 import '../styles/Dashboard.css';
 import SummarySection from './dashboard/sections/SummarySection';
 import SensorsSection from './dashboard/sections/SensorsSection';
@@ -18,7 +19,51 @@ const limits = {
   chlorine: { min: 0, max: 0.02, critical: 0.1, unit: 'mg/L', label: 'Chlorine' }
 };
 
-const HISTORY_POINTS = 32;
+const DEFAULT_HISTORY_POINTS = 32;
+const MIN_HISTORY_POINTS = 12;
+const MAX_HISTORY_POINTS = 180;
+const STORAGE_KEY = 'hydrosenseSharedStateV2';
+const LEADER_KEY = 'hydrosenseRealtimeLeaderV1';
+
+const createInitialThresholds = () => Object.fromEntries(
+  Object.keys(limits).map((key) => [key, { min: limits[key].min, max: limits[key].max }])
+);
+
+const createInitialSensors = () => ({
+  do: 6.27,
+  ph: 7.9,
+  temp: 29.7,
+  salinity: 32.2,
+  ammonia: 0.007,
+  nitrite: 0.025,
+  chlorine: 0.012,
+  waterLevel: 82,
+  uptime: 5166
+});
+
+const createInitialHistory = () => Object.fromEntries(Object.keys(limits).map((key) => [key, []]));
+
+const normalizeHistory = (history, historyWindow) => {
+  const fallback = createInitialHistory();
+  const source = history && typeof history === 'object' ? history : {};
+  return Object.fromEntries(
+    Object.keys(limits).map((key) => {
+      const next = Array.isArray(source[key]) ? source[key] : fallback[key];
+      return [key, next.slice(-historyWindow)];
+    })
+  );
+};
+
+const parseSavedState = (raw) => {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -26,32 +71,28 @@ const Dashboard = () => {
 
   const [themeMode, setThemeMode] = useState('dark');
   const [role] = useState(() => (localStorage.getItem('hydrosenseRole') === 'admin' ? 'admin' : 'operator'));
-  const [thresholds, setThresholds] = useState(
-    Object.fromEntries(
-      Object.keys(limits).map((key) => [key, { min: limits[key].min, max: limits[key].max }])
-    )
-  );
-
-  const [sensors, setSensors] = useState({
-    do: 6.27,
-    ph: 7.9,
-    temp: 29.7,
-    salinity: 32.2,
-    ammonia: 0.007,
-    nitrite: 0.025,
-    chlorine: 0.012,
-    waterLevel: 82,
-    uptime: 5166
-  });
-
-  const [history, setHistory] = useState(
-    Object.fromEntries(Object.keys(limits).map((key) => [key, []]))
-  );
+  const [thresholds, setThresholds] = useState(createInitialThresholds);
+  const [sensors, setSensors] = useState(createInitialSensors);
+  const [history, setHistory] = useState(createInitialHistory);
+  const [historyWindow, setHistoryWindow] = useState(DEFAULT_HISTORY_POINTS);
+  const [syncState, setSyncState] = useState('local-only');
+  const [isLeader, setIsLeader] = useState(true);
 
   const targets = useRef({ ...sensors });
   const conditionRef = useRef({});
   const cooldownRef = useRef({});
   const sensorRefs = useRef({});
+  const historyWindowRef = useRef(DEFAULT_HISTORY_POINTS);
+  const tabIdRef = useRef(`tab-${Math.random().toString(36).slice(2, 8)}`);
+  const broadcastRef = useRef(null);
+  const supabaseChannelRef = useRef(null);
+  const suppressPublishRef = useRef(false);
+  const lastSnapshotTsRef = useRef(0);
+  const snapshotRef = useRef(null);
+  const supabaseEnabled = useMemo(
+    () => Boolean(process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_ANON_KEY),
+    []
+  );
 
   const [alertLog, setAlertLog] = useState([]);
   const [alertModalOpen, setAlertModalOpen] = useState(false);
@@ -59,6 +100,48 @@ const Dashboard = () => {
   const [focusSensorKey, setFocusSensorKey] = useState('');
   const isAdmin = role === 'admin';
   const currentPage = location.pathname.split('/')[2] || 'live';
+
+  historyWindowRef.current = historyWindow;
+
+  const applySharedSnapshot = (payload) => {
+    if (!payload || typeof payload !== 'object') return;
+    const ts = Number(payload.ts) || 0;
+    if (ts <= lastSnapshotTsRef.current) return;
+
+    lastSnapshotTsRef.current = ts;
+    suppressPublishRef.current = true;
+
+    const nextHistoryWindow = Math.max(MIN_HISTORY_POINTS, Math.min(MAX_HISTORY_POINTS, Number(payload.historyWindow) || DEFAULT_HISTORY_POINTS));
+
+    setThresholds(() => {
+      const base = createInitialThresholds();
+      if (!payload.thresholds || typeof payload.thresholds !== 'object') return base;
+      return Object.fromEntries(
+        Object.keys(limits).map((key) => {
+          const next = payload.thresholds[key];
+          if (!next || Number.isNaN(Number(next.min)) || Number.isNaN(Number(next.max))) return [key, base[key]];
+          return [key, { min: Number(next.min), max: Number(next.max) }];
+        })
+      );
+    });
+
+    setSensors(() => {
+      const base = createInitialSensors();
+      if (!payload.sensors || typeof payload.sensors !== 'object') return base;
+      return {
+        ...base,
+        ...Object.fromEntries(Object.keys(base).map((key) => [key, Number(payload.sensors[key] ?? base[key])]))
+      };
+    });
+
+    setHistoryWindow(nextHistoryWindow);
+    setHistory(normalizeHistory(payload.history, nextHistoryWindow));
+    setAlertLog(Array.isArray(payload.alertLog) ? payload.alertLog : []);
+
+    setTimeout(() => {
+      suppressPublishRef.current = false;
+    }, 0);
+  };
 
   const pushAlert = (severity, title, message, source) => {
     const key = `${source}-${severity}`;
@@ -85,6 +168,143 @@ const Dashboard = () => {
   const getRange = (key) => thresholds[key] || { min: limits[key].min, max: limits[key].max };
 
   useEffect(() => {
+    snapshotRef.current = {
+      ts: lastSnapshotTsRef.current || Date.now(),
+      source: tabIdRef.current,
+      thresholds,
+      sensors,
+      history,
+      historyWindow,
+      alertLog
+    };
+  }, [thresholds, sensors, history, alertLog, historyWindow]);
+
+  useEffect(() => {
+    const saved = parseSavedState(localStorage.getItem(STORAGE_KEY));
+    if (saved) {
+      applySharedSnapshot(saved);
+    }
+  }, []);
+
+  useEffect(() => {
+    const bc = new BroadcastChannel('hydrosense-realtime-channel');
+    broadcastRef.current = bc;
+
+    bc.onmessage = (evt) => {
+      const payload = evt?.data;
+      if (!payload || payload.type !== 'state-update') return;
+      applySharedSnapshot(payload.snapshot);
+    };
+
+    const onStorage = (evt) => {
+      if (evt.key !== STORAGE_KEY || !evt.newValue) return;
+      applySharedSnapshot(parseSavedState(evt.newValue));
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      bc.close();
+      broadcastRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!supabaseEnabled) {
+      setSyncState('local-only');
+      return undefined;
+    }
+
+    const client = createClient(process.env.REACT_APP_SUPABASE_URL, process.env.REACT_APP_SUPABASE_ANON_KEY);
+    const channel = client.channel('hydrosense-live-room');
+    supabaseChannelRef.current = channel;
+    setSyncState('connecting');
+
+    channel
+      .on('broadcast', { event: 'state-update' }, ({ payload }) => {
+        applySharedSnapshot(payload?.snapshot);
+      })
+      .on('broadcast', { event: 'state-request' }, ({ payload }) => {
+        if (payload?.from === tabIdRef.current) return;
+        const snapshot = snapshotRef.current;
+        if (!snapshot) return;
+        channel.send({ type: 'broadcast', event: 'state-update', payload: { snapshot } });
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setSyncState('supabase-live');
+          channel.send({ type: 'broadcast', event: 'state-request', payload: { from: tabIdRef.current } });
+        }
+      });
+
+    return () => {
+      client.removeChannel(channel);
+      supabaseChannelRef.current = null;
+    };
+  }, [supabaseEnabled]);
+
+  useEffect(() => {
+    const tabId = tabIdRef.current;
+    const leaseMs = 5500;
+    const pulseMs = 1800;
+
+    const claimLeader = () => {
+      const now = Date.now();
+      const lease = parseSavedState(localStorage.getItem(LEADER_KEY));
+      const stale = !lease || !lease.ts || (now - Number(lease.ts)) > leaseMs;
+      const mine = lease?.id === tabId;
+
+      if (stale || mine) {
+        localStorage.setItem(LEADER_KEY, JSON.stringify({ id: tabId, ts: now }));
+        setIsLeader(true);
+      } else {
+        setIsLeader(false);
+      }
+    };
+
+    claimLeader();
+    const timer = setInterval(claimLeader, pulseMs);
+
+    return () => {
+      clearInterval(timer);
+      const lease = parseSavedState(localStorage.getItem(LEADER_KEY));
+      if (lease?.id === tabId) {
+        localStorage.removeItem(LEADER_KEY);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (suppressPublishRef.current) return;
+
+    const snapshot = {
+      ts: Date.now(),
+      source: tabIdRef.current,
+      thresholds,
+      sensors,
+      history,
+      historyWindow,
+      alertLog
+    };
+    lastSnapshotTsRef.current = snapshot.ts;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+
+    if (broadcastRef.current) {
+      broadcastRef.current.postMessage({ type: 'state-update', snapshot });
+    }
+
+    if (supabaseChannelRef.current) {
+      supabaseChannelRef.current.send({
+        type: 'broadcast',
+        event: 'state-update',
+        payload: { snapshot }
+      });
+    }
+  }, [thresholds, sensors, history, alertLog, historyWindow]);
+
+  useEffect(() => {
+    if (!isLeader) return undefined;
+
     pushAlert('info', 'System Initialized', 'Live sensor monitoring session started.', 'system');
 
     const targetInterval = setInterval(() => {
@@ -116,7 +336,7 @@ const Dashboard = () => {
           const nextHistory = { ...prevHistory };
           Object.keys(limits).forEach((key) => {
             const entries = [...(prevHistory[key] || []), next[key]];
-            nextHistory[key] = entries.slice(-HISTORY_POINTS);
+            nextHistory[key] = entries.slice(-historyWindowRef.current);
           });
           return nextHistory;
         });
@@ -129,9 +349,11 @@ const Dashboard = () => {
       clearInterval(targetInterval);
       clearInterval(driftInterval);
     };
-  }, []);
+  }, [isLeader]);
 
   useEffect(() => {
+    if (!isLeader) return;
+
     Object.keys(limits).forEach((key) => {
       const range = thresholds[key] || { min: limits[key].min, max: limits[key].max };
       const limit = limits[key];
@@ -166,7 +388,7 @@ const Dashboard = () => {
 
     conditionRef.current['water-low'] = lowWater;
     conditionRef.current['water-high'] = highWater;
-  }, [sensors, thresholds]);
+  }, [sensors, thresholds, isLeader]);
 
   const getSensorState = (key, val) => {
     const range = getRange(key);
@@ -217,6 +439,7 @@ const Dashboard = () => {
   };
 
   const clearAllAlerts = () => {
+    if (!isAdmin) return;
     setAlertLog([]);
   };
 
@@ -225,6 +448,7 @@ const Dashboard = () => {
   };
 
   const createManualAlert = () => {
+    if (!isAdmin) return;
     pushAlert('info', 'Manual Operator Alert', 'Operator created a manual checkpoint alert.', 'manual-operator');
   };
 
@@ -266,6 +490,12 @@ const Dashboard = () => {
       if (field === 'max' && next.max <= next.min) next.max = +(next.min + 0.01).toFixed(3);
       return { ...prev, [key]: next };
     });
+  };
+
+  const updateHistoryWindow = (nextValue) => {
+    if (!isAdmin) return;
+    if (Number.isNaN(nextValue)) return;
+    setHistoryWindow(Math.max(MIN_HISTORY_POINTS, Math.min(MAX_HISTORY_POINTS, nextValue)));
   };
 
   const formatAlertTime = (ts) => {
@@ -322,7 +552,7 @@ const Dashboard = () => {
   const healthySensorCount = sensorKeys.length - activeThresholdAlerts.length;
   const healthPercent = Math.round((healthySensorCount / sensorKeys.length) * 100);
 
-  const visibleAlerts = isAdmin ? alertLog : alertLog.filter((a) => a.source !== 'system');
+  const visibleAlerts = alertLog;
   const unreadCount = visibleAlerts.filter((a) => !a.read).length;
   const filteredAlerts = alertFilter === 'all'
     ? visibleAlerts
@@ -341,6 +571,8 @@ const Dashboard = () => {
         sensorKeys={sensorKeys}
         getRange={getRange}
         updateThreshold={updateThreshold}
+        historyWindow={historyWindow}
+        updateHistoryWindow={updateHistoryWindow}
       />
     )
     : (
@@ -421,6 +653,9 @@ const Dashboard = () => {
             <h1 className="command-title">Command Center</h1>
             <p className="command-subtitle">
               Node: BFAR-10 Hatchery | Species: Milkfish (Fry) | Mode: {isAdmin ? 'Admin Console' : 'Operator Console'}
+            </p>
+            <p className="command-subtitle">
+              Sync: {syncState === 'supabase-live' ? 'Cross-Device Live' : 'Local Shared'} | Sensor Driver: {isLeader ? 'Active' : 'Follower'}
             </p>
           </div>
           <div className="topbar-actions">
