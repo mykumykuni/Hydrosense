@@ -129,6 +129,14 @@ export const useProfileAndOperators = ({ apiBase, authToken, isAdmin }) => {
     return () => clearTimeout(timer);
   }, [isAdmin, operatorSearch, loadOperators]);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    const interval = setInterval(() => {
+      loadOperators(operatorSearch);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isAdmin, operatorSearch, loadOperators]);
+
   return {
     authUser,
     setAuthUser,
@@ -144,6 +152,7 @@ export const useProfileAndOperators = ({ apiBase, authToken, isAdmin }) => {
     setOperatorSearch,
     operatorError,
     operatorsLoading,
-    mutateOperator
+    mutateOperator,
+    refreshOperators: () => loadOperators(operatorSearch)
   };
 };

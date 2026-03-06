@@ -14,6 +14,7 @@ const OperatorManagementSection = ({
   onApprove,
   onDeactivate,
   onReactivate,
+  onRefresh,
   error,
   loading
 }) => {
@@ -22,6 +23,10 @@ const OperatorManagementSection = ({
       <article className="analysis-card utility-card">
         <h3 className="mini-label">Operator Profiles</h3>
         <p className="water-level-meta">Pending approvals: {pendingCount}</p>
+
+        <div style={{ marginTop: '10px', marginBottom: '4px' }}>
+          <button className="btn-secondary" onClick={onRefresh} disabled={loading}>Refresh List</button>
+        </div>
 
         <div style={{ marginTop: '12px', marginBottom: '12px' }}>
           <label className="input-label">Search by name/email</label>

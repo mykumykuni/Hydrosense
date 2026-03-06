@@ -75,7 +75,8 @@ const Dashboard = () => {
     setOperatorSearch,
     operatorError,
     operatorsLoading,
-    mutateOperator
+    mutateOperator,
+    refreshOperators
   } = useProfileAndOperators({
     apiBase: API_BASE,
     authToken,
@@ -226,6 +227,7 @@ const Dashboard = () => {
       onApprove={(userId) => mutateOperator('approve_operator', userId)}
       onDeactivate={(userId) => mutateOperator('deactivate_operator', userId)}
       onReactivate={(userId) => mutateOperator('reactivate_operator', userId)}
+      onRefresh={refreshOperators}
       error={operatorError}
       loading={operatorsLoading}
     />
