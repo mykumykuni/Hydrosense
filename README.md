@@ -1,48 +1,29 @@
-HYDROSENSE: Real-Time Water Quality Monitoring System for Milkfish (Chanos chanos) Hatchery
+# Hydrosense
 
-Backend status notice:
-The backend folder under `Hydrosense/backend` has been intentionally removed.
-Reason: the previous backend setup was unstable and repeatedly failed during Docker startup.
-Current repository focus is frontend-only until a new backend is rebuilt from a clean baseline.
+Hydrosense is a real-time water quality monitoring app for milkfish hatchery operations.
 
-📌 Project Overview
-HYDROSENSE is an IoT-based solution designed to modernize water quality management in the Philippine aquaculture sector. Specifically focused on Milkfish (Bangus) hatcheries, this system addresses the critical gap between traditional manual monitoring and the high-precision requirements for the early life stages of milkfish.
+Current implementation uses:
+- React frontend (`Hydrosense/frontend`)
+- Vercel serverless API (`Hydrosense/api`)
+- Backend state layer in a dedicated folder outside frontend (`Hydrosense/backend/database`)
 
-🌏 Context & Industry Background
-Aquaculture has surpassed capture fisheries globally, reaching a milestone of 94.4 million tons in 2022. In the Philippines, aquaculture is a cornerstone of food security, contributing ₱124.02 billion to the economy.
+## Current Live URL
 
-The Focus Species: Milkfish (Chanos chanos) is the crown jewel of Philippine aquaculture. The Philippines is the world’s leading producer, contributing 41% of global production.
+- Primary domain: `https://hydrosense.app`
+- Secondary domain: `https://www.hydrosense.app`
 
-Economic Impact: In 2022 alone, milkfish production reached 387,964 metric tons. In Region X, milkfish accounts for the majority of the 14,364.85 MT regional yield.
+## Notes About `*.vercel.app` Names
 
-The Decline: Despite its history, the Philippines' global aquaculture standing has dropped from 4th to 12th place since 1985. Modernization is no longer optional—it is a necessity for recovery.
+Requested vanity subdomains like `www.hydrosenseapp.vercel.app` can only be used if that namespace belongs to your Vercel account.
+Your current account can use:
+- `*.vercel.app`
+- `*.mykumykunis-projects.vercel.app`
 
-⚠️ The Problem: The "Visibility Gap"
-Traditional monitoring in Philippine hatcheries relies on manual sampling, which is:
+## Deployment
 
-Labor Intensive: Requires physical presence and constant manual testing.
+Deploy from repository root so frontend + API ship together:
 
-Prone to Error: Human error and time gaps between tests leave farms vulnerable.
-
-The "Nighttime Danger": Rapid water quality shifts (such as dissolved oxygen drops) often occur at night when monitoring is least frequent.
-
-Economic Risk: For small-scale operators in Region X, a single fish kill event can result in a 30–50% loss of annual income, devastating local livelihoods.
-
-💡 The Solution: HYDROSENSE
-Following the National Aquaculture Development and Management Plan (ADMP) 2025-2030, HYDROSENSE proposes a technological intervention to transform the sector into a climate-resilient and globally competitive industry.
-
-Key Features:
-Automated Monitoring: Real-time tracking of critical parameters (pH, Temperature, Dissolved Oxygen) specific to Milkfish requirements.
-
-Early Warning System: Instant alerts to prevent fish kill incidents before they reach lethal thresholds.
-
-Data-Driven Insights: Provides historical data to help farmers meet international traceability and quality assurance standards for export.
-
-Scalability: Designed with the constraints of small-scale hatchery operators in mind, ensuring cost-effectiveness and ease of use.
-
-🛠 Tech Stack (To be updated)
-Hardware: [e.g., ESP32/Arduino, Water Quality Sensors]
-
-Connectivity: [e.g., LoRaWAN, Wi-Fi, or GSM]
-
-Software: [e.g., React Native/Flutter for Mobile, Firebase for Database]
+```bash
+cd Hydrosense
+npm run vercel:deploy
+```

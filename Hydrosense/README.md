@@ -1,14 +1,32 @@
 # Hydrosense
 
-Hydrosense runs a React frontend plus a Vercel serverless backend API.
+Hydrosense runs a React frontend with a Vercel serverless backend API for shared real-time state.
 
-## Project Structure
+## Architecture
 
-- `frontend/` - React client
-- `api/` - Vercel serverless functions (`/api/state`)
-- `backend/database/` - backend data/state modules and seed file
+- `frontend/` - React client UI
+- `api/state.js` - Vercel serverless API endpoint (`GET/POST /api/state`)
+- `backend/database/` - backend data/state engine and persistence modules
 
-The database/state layer is intentionally outside `frontend/` to keep backend concerns separated.
+The database/state folder is intentionally outside `frontend/`.
+
+## Features
+
+- Shared sensor state across admin/operator via backend API
+- Admin-only control actions enforced server-side
+- Shared alerts and history window controls
+- Real-time simulation and alerts generated in backend engine
+
+## Persistence
+
+Primary persistence (recommended):
+- Vercel KV via environment variables:
+  - `KV_REST_API_URL`
+  - `KV_REST_API_TOKEN`
+
+Fallback persistence:
+- In-memory state in function runtime
+- Local JSON seed/fallback at `backend/database/state.json`
 
 ## Local Development
 
@@ -20,7 +38,7 @@ npm install
 npm start
 ```
 
-Production build from repo root:
+Build from repo root:
 
 ```bash
 npm run vercel-build
@@ -28,19 +46,19 @@ npm run vercel-build
 
 ## Deployment
 
-Deploy from repository root so both frontend output and API routes are included:
+Always deploy from repository root so both frontend output and API functions are included:
 
 ```bash
+npm run vercel:link
 npm run vercel:deploy
 ```
 
-## Persistent Backend State (Vercel)
+## Domains
 
-For persistent cross-instance state, configure Vercel KV environment variables
-on the `frontend` project:
+Primary live domain:
+- `https://hydrosense.app`
 
-- `KV_REST_API_URL`
-- `KV_REST_API_TOKEN`
+Also configured:
+- `https://www.hydrosense.app`
 
-If KV is not configured, backend state falls back to in-memory plus local file
-(`backend/database/state.json`).
+Note: custom `*.vercel.app` aliases are limited to namespaces owned by your Vercel account.
