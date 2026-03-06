@@ -9,22 +9,26 @@ import AlertsPageSection from './dashboard/sections/AlertsPageSection';
 import AlertModal from './dashboard/AlertModal';
 import ProfileSection from './dashboard/sections/ProfileSection';
 import OperatorManagementSection from './dashboard/sections/OperatorManagementSection';
+import ReportsSection from './dashboard/sections/ReportsSection';
 import DashboardSidebar from './dashboard/DashboardSidebar';
 import DashboardTopbar from './dashboard/DashboardTopbar';
 import DashboardMobileTabs from './dashboard/DashboardMobileTabs';
+import SensorDetailModal from './dashboard/SensorDetailModal';
 import { clearAuthSession, getAuthToken, getAuthUser } from '../utils/authStorage';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useProfileAndOperators } from '../hooks/useProfileAndOperators';
+import { useReports } from '../hooks/useReports';
 import { getApiBase } from '../utils/apiBase';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [themeMode, setThemeMode] = useState('dark');
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertFilter, setAlertFilter] = useState('all');
   const [focusSensorKey, setFocusSensorKey] = useState('');
+  const [selectedSensorKey, setSelectedSensorKey] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const authToken = getAuthToken();
   const initialAuthUser = getAuthUser();
@@ -53,7 +57,6 @@ const Dashboard = () => {
     clearAllAlerts,
     resolveAlert,
     createManualAlert,
-    reportOperatorIssue,
     updateThreshold,
     updateHistoryWindow
   } = useDashboardData({
@@ -83,6 +86,16 @@ const Dashboard = () => {
     authToken,
     isAdmin
   });
+
+  const {
+    reports,
+    reportsLoading,
+    reportsError,
+    reportUnreadCount,
+    submitReport,
+    replyToReport,
+    updateReportStatus
+  } = useReports({ apiBase: API_BASE, authToken, isAdmin });
 
   useEffect(() => {
     if (!authToken || !initialAuthUser) {
@@ -175,7 +188,7 @@ const Dashboard = () => {
     ? visibleAlerts
     : visibleAlerts.filter((a) => a.severity === alertFilter);
 
-  const themeClass = themeMode === 'light' ? 'theme-light' : 'theme-dark';
+  const themeClass = 'theme-dark';
   const roleClass = isAdmin ? 'role-admin' : 'role-operator';
 
   const utilitySection = isAdmin
@@ -185,17 +198,15 @@ const Dashboard = () => {
         limits={limits}
         activeThresholdAlerts={activeThresholdAlerts}
         alertLog={alertLog}
-        sensorKeys={sensorKeys}
-        getRange={getRange}
-        updateThreshold={updateThreshold}
         historyWindow={historyWindow}
         updateHistoryWindow={updateHistoryWindow}
+        formatAlertTime={formatAlertTime}
       />
     )
     : (
       <OperationsSectionOperator
         sensors={sensors}
-        onReportIssue={reportOperatorIssue}
+        onNavigateReports={() => navigate('/dashboard/reports')}
       />
     );
 
@@ -255,43 +266,64 @@ const Dashboard = () => {
               openRelatedSensor={openRelatedSensor}
             />
           )
-          : (
-            <>
-              <SummarySection
-                clarity={clarity}
-                activeThresholdAlerts={activeThresholdAlerts}
-                healthPercent={healthPercent}
-                healthySensorCount={healthySensorCount}
-                sensorCount={sensorKeys.length}
+          : currentPage === 'reports'
+            ? (
+              <ReportsSection
+                isAdmin={isAdmin}
+                reports={reports}
+                reportsLoading={reportsLoading}
+                reportsError={reportsError}
+                submitReport={submitReport}
+                replyToReport={replyToReport}
+                updateReportStatus={updateReportStatus}
               />
-              <SensorsSection
-                prioritySensors={prioritySensors}
-                secondarySensors={secondarySensors}
-                limits={limits}
-                sensors={sensors}
-                history={history}
-                getRange={getRange}
-                getSensorState={getSensorState}
-                getSensorInsight={getSensorInsight}
-                renderSparkline={renderSparkline}
-                focusSensorKey={focusSensorKey}
-                sensorRefs={sensorRefs}
-              />
-            </>
-          );
+            )
+            : (
+              <>
+                <SummarySection
+                  clarity={clarity}
+                  activeThresholdAlerts={activeThresholdAlerts}
+                  healthPercent={healthPercent}
+                  healthySensorCount={healthySensorCount}
+                  sensorCount={sensorKeys.length}
+                />
+                <SensorsSection
+                  prioritySensors={prioritySensors}
+                  secondarySensors={secondarySensors}
+                  limits={limits}
+                  sensors={sensors}
+                  history={history}
+                  getRange={getRange}
+                  getSensorState={getSensorState}
+                  getSensorInsight={getSensorInsight}
+                  renderSparkline={renderSparkline}
+                  focusSensorKey={focusSensorKey}
+                  sensorRefs={sensorRefs}
+                  isAdmin={isAdmin}
+                  onSensorClick={setSelectedSensorKey}
+                />
+              </>
+            );
 
   return (
     <div className={`dashboard-workspace ${themeClass} ${roleClass}`}>
-      <DashboardSidebar currentPage={currentPage} isAdmin={isAdmin} navigate={navigate} />
+      <DashboardSidebar
+        currentPage={currentPage}
+        isAdmin={isAdmin}
+        navigate={navigate}
+        pendingCount={pendingCount}
+        reportUnreadCount={reportUnreadCount}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <main className="main-canvas">
         <DashboardTopbar
+          currentPage={currentPage}
           isAdmin={isAdmin}
           authDisplayName={authUser?.profile?.displayName || (isAdmin ? 'Admin' : 'Operator')}
           syncState={syncState}
           historyWindow={historyWindow}
-          themeMode={themeMode}
-          setThemeMode={setThemeMode}
           unreadCount={unreadCount}
           setAlertModalOpen={setAlertModalOpen}
           exportAlertHistory={exportAlertHistory}
@@ -299,11 +331,34 @@ const Dashboard = () => {
             clearAuthSession();
             navigate('/login');
           }}
+          onMenuToggle={() => setSidebarOpen((prev) => !prev)}
         />
 
-        <DashboardMobileTabs currentPage={currentPage} isAdmin={isAdmin} navigate={navigate} />
+        <DashboardMobileTabs
+          currentPage={currentPage}
+          isAdmin={isAdmin}
+          navigate={navigate}
+          pendingCount={pendingCount}
+          reportUnreadCount={reportUnreadCount}
+        />
 
         <div className="dashboard-page-content">{pageContent}</div>
+
+        {selectedSensorKey && (
+          <SensorDetailModal
+            sensorKey={selectedSensorKey}
+            onClose={() => setSelectedSensorKey(null)}
+            limits={limits}
+            sensors={sensors}
+            history={history}
+            getRange={getRange}
+            getSensorState={getSensorState}
+            getSensorInsight={getSensorInsight}
+            alertLog={alertLog}
+            updateThreshold={updateThreshold}
+            formatAlertTime={formatAlertTime}
+          />
+        )}
 
         <AlertModal
           isOpen={alertModalOpen}

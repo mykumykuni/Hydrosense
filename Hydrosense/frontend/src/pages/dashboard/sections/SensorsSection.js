@@ -1,5 +1,14 @@
 import React from 'react';
 
+const getTrend = (histValues) => {
+  if (!histValues || histValues.length < 2) return { arrow: '\u2192', cls: 'trend-stable' };
+  const last5 = histValues.slice(-5);
+  const diff = last5[last5.length - 1] - last5[0];
+  if (diff > 0.01) return { arrow: '\u2191', cls: 'trend-up' };
+  if (diff < -0.01) return { arrow: '\u2193', cls: 'trend-down' };
+  return { arrow: '\u2192', cls: 'trend-stable' };
+};
+
 const SensorsSection = ({
   prioritySensors,
   secondarySensors,
@@ -11,7 +20,9 @@ const SensorsSection = ({
   getSensorInsight,
   renderSparkline,
   focusSensorKey,
-  sensorRefs
+  sensorRefs,
+  isAdmin,
+  onSensorClick
 }) => {
   return (
     <section className="sensor-layout">
@@ -22,14 +33,15 @@ const SensorsSection = ({
           const precision = key === 'do' ? 2 : 1;
           const value = sensors[key].toFixed(precision);
           const trendColor = status.state === 'critical' ? '#de8a7f' : status.state === 'warning' ? '#eabf82' : '#8fd3d7';
+          const trend = getTrend(history[key]);
 
           return (
             <article
               key={key}
-              ref={(node) => {
-                sensorRefs.current[key] = node;
-              }}
-              className={`glass-kpi-card sensor-card priority-card ${status.cls} ${focusSensorKey === key ? 'focus-sensor' : ''}`}
+              ref={(node) => { sensorRefs.current[key] = node; }}
+              className={`glass-kpi-card sensor-card priority-card ${status.cls} ${focusSensorKey === key ? 'focus-sensor' : ''} ${isAdmin ? 'sensor-card-clickable' : ''}`}
+              onClick={() => isAdmin && onSensorClick(key)}
+              title={isAdmin ? `Click to view ${limits[key].label} details` : undefined}
             >
               <div className="sensor-head">
                 <span className="mini-label">{limits[key].label}</span>
@@ -38,6 +50,7 @@ const SensorsSection = ({
               <div className="kpi-value priority-value">
                 {value}
                 <span className="kpi-unit">{limits[key].unit}</span>
+                <span className={`trend-arrow ${trend.cls}`}>{trend.arrow}</span>
               </div>
               <p className="sensor-range">Range: {range.min} - {range.max} {limits[key].unit}</p>
               <p className="sensor-insight">{getSensorInsight(key, sensors[key])}</p>
@@ -58,14 +71,15 @@ const SensorsSection = ({
           const status = getSensorState(key, sensors[key]);
           const value = sensors[key].toFixed(3);
           const trendColor = status.state === 'critical' ? '#de8a7f' : status.state === 'warning' ? '#eabf82' : '#8fd3d7';
+          const trend = getTrend(history[key]);
 
           return (
             <article
               key={key}
-              ref={(node) => {
-                sensorRefs.current[key] = node;
-              }}
-              className={`glass-kpi-card sensor-card compact-sensor-card ${status.cls} ${focusSensorKey === key ? 'focus-sensor' : ''}`}
+              ref={(node) => { sensorRefs.current[key] = node; }}
+              className={`glass-kpi-card sensor-card compact-sensor-card ${status.cls} ${focusSensorKey === key ? 'focus-sensor' : ''} ${isAdmin ? 'sensor-card-clickable' : ''}`}
+              onClick={() => isAdmin && onSensorClick(key)}
+              title={isAdmin ? `Click to view ${limits[key].label} details` : undefined}
             >
               <div className="sensor-head">
                 <span className="mini-label">{limits[key].label}</span>
@@ -74,6 +88,7 @@ const SensorsSection = ({
               <div className="kpi-value compact-value">
                 {value}
                 <span className="kpi-unit">{limits[key].unit}</span>
+                <span className={`trend-arrow ${trend.cls}`}>{trend.arrow}</span>
               </div>
               <p className="sensor-range">Range: {range.min} - {range.max} {limits[key].unit}</p>
               {renderSparkline(history[key], trendColor)}

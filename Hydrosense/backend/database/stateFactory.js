@@ -44,6 +44,7 @@ const createRealtimeState = () => {
     },
     users: [],
     sessions: {},
+    reports: [],
     updatedAt: Date.now()
   };
 };

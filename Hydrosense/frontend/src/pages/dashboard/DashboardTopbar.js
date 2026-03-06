@@ -1,21 +1,43 @@
 import React from 'react';
 
+const getPageTitle = (currentPage, isAdmin) => {
+  switch (currentPage) {
+    case 'live': return 'Live Monitoring';
+    case 'operations': return isAdmin ? 'Admin Controls' : 'Operator Tasks';
+    case 'alerts': return isAdmin ? 'Compliance Console' : 'Incident Reporting';
+    case 'reports': return isAdmin ? 'Report Inbox' : 'Operator Reports';
+    case 'profile': return 'My Profile';
+    case 'operators': return 'Operator Profiles';
+    default: return 'Dashboard';
+  }
+};
+
 const DashboardTopbar = ({
+  currentPage,
   isAdmin,
   authDisplayName,
   syncState,
   historyWindow,
-  themeMode,
-  setThemeMode,
   unreadCount,
   setAlertModalOpen,
   exportAlertHistory,
-  onLogout
+  onLogout,
+  onMenuToggle
 }) => {
   return (
     <header className="dashboard-topbar">
-      <div>
-        <h1 className="command-title">Command Center</h1>
+      <div className="topbar-title-group">
+        <div className="topbar-title-row">
+          <button
+            className="hamburger-btn btn-secondary topbar-fixed"
+            type="button"
+            onClick={onMenuToggle}
+            aria-label="Toggle sidebar"
+          >
+            ☰
+          </button>
+          <h1 className="command-title">{getPageTitle(currentPage, isAdmin)}</h1>
+        </div>
         <p className="command-subtitle">
           Node: BFAR-10 Hatchery | Species: Milkfish (Fry) | Mode: {isAdmin ? 'Admin Console' : 'Operator Console'}
         </p>
@@ -27,9 +49,6 @@ const DashboardTopbar = ({
         <div className={`uptime-widget topbar-fixed role-widget role-chip-display ${isAdmin ? 'admin' : 'operator'}`}>
           <span className="mini-label">{authDisplayName}</span>
         </div>
-        <button className="btn-secondary topbar-fixed theme-btn" onClick={() => setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))}>
-          {themeMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
-        </button>
         <button className="btn-secondary topbar-fixed alert-btn" onClick={() => setAlertModalOpen(true)}>
           Alerts
           {unreadCount > 0 && <span className="alert-count-pill">{unreadCount}</span>}

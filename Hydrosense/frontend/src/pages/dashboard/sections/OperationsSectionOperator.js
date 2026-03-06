@@ -1,7 +1,7 @@
 import React from 'react';
 import WaterLevelSection from './WaterLevelSection';
 
-const OperationsSectionOperator = ({ sensors, onReportIssue }) => {
+const OperationsSectionOperator = ({ sensors, onNavigateReports }) => {
   return (
     <section className="operations-grid">
       <WaterLevelSection sensors={sensors} />
@@ -20,8 +20,8 @@ const OperationsSectionOperator = ({ sensors, onReportIssue }) => {
           <div className="status-dot" style={{ background: '#6eb5b7' }}></div>
           <span>Escalate to admin for threshold or compliance actions.</span>
         </div>
-        <button className="btn-secondary operator-issue-btn" type="button" onClick={onReportIssue}>
-          Report Issue To Admin
+        <button className="btn-secondary operator-issue-btn" type="button" onClick={onNavigateReports}>
+          Go to Operator Reports
         </button>
       </article>
     </section>
