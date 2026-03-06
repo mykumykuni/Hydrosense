@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
-const DEFAULT_ADMIN_EMAIL = process.env.HYDROSENSE_ADMIN_EMAIL || 'admin@hydrosense.app';
-const DEFAULT_ADMIN_PASSWORD = process.env.HYDROSENSE_ADMIN_PASSWORD || 'Admin@12345';
+const ADMIN_SEED_EMAIL = String(process.env.HYDROSENSE_ADMIN_EMAIL || '').trim().toLowerCase();
+const ADMIN_SEED_PASSWORD = String(process.env.HYDROSENSE_ADMIN_PASSWORD || '');
 
 const now = () => Date.now();
 
@@ -48,8 +48,12 @@ const ensureAdminSeed = (state) => {
   const hasAdmin = state.users.some((user) => user.role === 'admin');
   if (hasAdmin) return;
 
-  const email = normalizeEmail(DEFAULT_ADMIN_EMAIL);
-  const credentials = createPasswordRecord(DEFAULT_ADMIN_PASSWORD);
+  // Admin seeding is explicit opt-in only via env vars.
+  if (!ADMIN_SEED_EMAIL || !ADMIN_SEED_PASSWORD) return;
+  if (ADMIN_SEED_PASSWORD.length < 8) return;
+
+  const email = normalizeEmail(ADMIN_SEED_EMAIL);
+  const credentials = createPasswordRecord(ADMIN_SEED_PASSWORD);
   const timestamp = now();
 
   state.users.push({

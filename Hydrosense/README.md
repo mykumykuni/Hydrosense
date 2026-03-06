@@ -89,6 +89,8 @@ Note: custom `*.vercel.app` aliases are limited to namespaces owned by your Verc
 - `GET /api/operators` (authenticated admin only)
 - `POST /api/operators` actions: `approve_operator`, `deactivate_operator`, `reactivate_operator`
 
-Default seeded admin credentials (change with env vars in production):
-- Email: `admin@hydrosense.app`
-- Password: `Admin@12345`
+Optional admin seed via environment variables:
+- `HYDROSENSE_ADMIN_EMAIL`
+- `HYDROSENSE_ADMIN_PASSWORD`
+
+If these env vars are not provided, no default admin account is auto-created.

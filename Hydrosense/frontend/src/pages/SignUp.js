@@ -15,7 +15,17 @@ const SignUp = () => {
   const errorMap = {
     missing_fields: 'Please complete all required fields.',
     weak_password: 'Password must be at least 8 characters.',
-    email_exists: 'This email is already registered.'
+    email_exists: 'This email is already registered.',
+    invalid_response: 'Server returned an invalid response. Please try again.',
+    auth_service_unavailable: 'Registration service is unavailable. Please try again.'
+  };
+
+  const readJsonSafe = async (response) => {
+    try {
+      return await response.json();
+    } catch {
+      return { ok: false, error: 'invalid_response' };
+    }
   };
 
   const handleRegister = async (e) => {
@@ -40,7 +50,7 @@ const SignUp = () => {
           }
         })
       });
-      const data = await response.json();
+      const data = await readJsonSafe(response);
       if (!response.ok || !data.ok) {
         setError(errorMap[data.error] || 'Unable to register now.');
         return;

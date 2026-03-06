@@ -17,7 +17,17 @@ const Login = () => {
     invalid_credentials: 'Email or password is incorrect.',
     pending_approval: 'Registration pending admin approval.',
     deactivated: 'Your account is deactivated. Contact admin.',
-    invalid_token: 'Session expired. Please login again.'
+    invalid_token: 'Session expired. Please login again.',
+    invalid_response: 'Server returned an invalid response. Please try again.',
+    auth_service_unavailable: 'Login service is unavailable. Please try again.'
+  };
+
+  const readJsonSafe = async (response) => {
+    try {
+      return await response.json();
+    } catch {
+      return { ok: false, error: 'invalid_response' };
+    }
   };
 
   const handleLoginSubmit = async (e) => {
@@ -41,7 +51,7 @@ const Login = () => {
         })
       });
 
-      const data = await response.json();
+      const data = await readJsonSafe(response);
       if (!response.ok || !data.ok) {
         setError(errorMap[data.error] || 'Unable to login right now.');
         return;
@@ -104,10 +114,6 @@ const Login = () => {
             <button type="submit" className="btn-solid" disabled={isSubmitting}>
               {isSubmitting ? 'Signing In...' : 'Initialize Session'}
             </button>
-
-            <p className="project-sub" style={{ marginTop: '14px', fontSize: '13px' }}>
-              Default admin seed: <strong>admin@hydrosense.app</strong> / <strong>Admin@12345</strong>
-            </p>
             
             <button type="button" className="register-link-btn" onClick={() => navigate('/signup')}>
               Register New Operator

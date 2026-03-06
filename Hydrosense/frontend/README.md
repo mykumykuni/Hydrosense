@@ -41,9 +41,11 @@ It reads/writes shared state through backend API:
 - Operator login requires admin approval
 - Dashboard routes are protected by session token in local storage
 
-Default seeded admin account:
-- `admin@hydrosense.app`
-- `Admin@12345`
+Optional admin seed (set on backend environment):
+- `HYDROSENSE_ADMIN_EMAIL`
+- `HYDROSENSE_ADMIN_PASSWORD`
+
+If not set, no default admin account is auto-created.
 
 ### Shared Across Roles
 
