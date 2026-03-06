@@ -34,7 +34,12 @@ module.exports = async (req, res) => {
     return;
   }
 
-  let state = getState();
+  if (!['GET', 'POST'].includes(req.method)) {
+    res.status(405).send(JSON.stringify({ error: 'Method Not Allowed' }));
+    return;
+  }
+
+  let state = await getState();
   state = advanceState(state);
 
   if (req.method === 'POST') {
@@ -49,6 +54,6 @@ module.exports = async (req, res) => {
     }
   }
 
-  const saved = saveState(state);
+  const saved = await saveState(state);
   res.status(200).send(JSON.stringify(toPublicState(saved)));
 };

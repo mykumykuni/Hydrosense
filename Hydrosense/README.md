@@ -33,3 +33,14 @@ Deploy from repository root so both frontend output and API routes are included:
 ```bash
 npm run vercel:deploy
 ```
+
+## Persistent Backend State (Vercel)
+
+For persistent cross-instance state, configure Vercel KV environment variables
+on the `frontend` project:
+
+- `KV_REST_API_URL`
+- `KV_REST_API_TOKEN`
+
+If KV is not configured, backend state falls back to in-memory plus local file
+(`backend/database/state.json`).

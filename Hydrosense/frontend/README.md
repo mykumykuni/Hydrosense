@@ -101,6 +101,7 @@ Deploy from repository root so both frontend build and root API functions are in
 - Frontend output is `frontend/build`
 - API routes are in `api/`
 - Backend state/data modules are in `backend/database/`
+- Persistent state uses Vercel KV when `KV_REST_API_URL` and `KV_REST_API_TOKEN` are set in project environment variables
 
 ## Foolproof Deploy Flow
 
