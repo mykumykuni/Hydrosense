@@ -2,6 +2,9 @@
   "name": "hydrosense",
   "version": "1.0.0",
   "description": "Water management system with React frontend and Laravel backend",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "docker-compose up -d && cd frontend && npm start",
     "dev:install": "docker-compose up -d && cd frontend && npm install && npm start",
@@ -13,7 +16,9 @@
     "frontend:start": "cd frontend && npm start",
     "frontend:build": "cd frontend && npm run build",
     "vercel-build": "npm ci --prefix frontend && npm run build --prefix frontend",
-    "deploy:frontend": "cd frontend && vercel --prod"
+    "vercel:link": "vercel link --cwd frontend",
+    "vercel:deploy": "vercel --cwd frontend --prod --yes",
+    "deploy:frontend": "npm run vercel:deploy"
   },
   "keywords": [
     "hydrosense",

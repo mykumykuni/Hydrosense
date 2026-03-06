@@ -86,3 +86,20 @@ The repo supports either root-level deploy config or frontend-root deploy config
 - Frontend config: `frontend/vercel.json`
 
 Use the config matching your Vercel project's Root Directory setting.
+
+## Foolproof Deploy Flow
+
+Use these commands from repository root (`Hydrosense/`) so deploy behavior stays consistent:
+
+```bash
+npm run vercel:link
+npm run vercel:deploy
+```
+
+This always deploys from `frontend/` using `--cwd frontend`.
+
+Extra safeguards in this repo:
+
+- Node runtime pinned to `20.x` in both `package.json` files
+- Vercel build path uses explicit `vercel-build` scripts
+- Frontend build command is `npm run vercel-build`
