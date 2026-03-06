@@ -1,18 +1,18 @@
 # Hydrosense
 
-Hydrosense is currently a frontend-only project.
+Hydrosense runs a React frontend plus a Vercel serverless backend API.
 
-## Why There Is No Backend
+## Project Structure
 
-The previous backend implementation was removed on purpose because it was unstable and repeatedly failing to boot in Docker.
-To avoid blocking frontend progress and reduce maintenance overhead, the backend folder was deleted until a clean, verified backend can be rebuilt later.
+- `frontend/` - React client
+- `api/` - Vercel serverless functions (`/api/state`)
+- `backend/database/` - backend data/state modules and seed file
 
-## Current Structure
+The database/state layer is intentionally outside `frontend/` to keep backend concerns separated.
 
-- `frontend/` - React application
-- `docker-compose.yml` - kept in repository, but backend services are currently not active
+## Local Development
 
-## Frontend Development
+Frontend:
 
 ```bash
 cd frontend
@@ -20,9 +20,16 @@ npm install
 npm start
 ```
 
-Frontend runs at `http://localhost:3000`.
+Production build from repo root:
 
-## Status
+```bash
+npm run vercel-build
+```
 
-- Backend: intentionally removed
-- Frontend: active
+## Deployment
+
+Deploy from repository root so both frontend output and API routes are included:
+
+```bash
+npm run vercel:deploy
+```

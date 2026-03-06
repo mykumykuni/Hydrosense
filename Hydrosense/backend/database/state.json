@@ -1,0 +1,52 @@
+{
+  "thresholds": {
+    "do": { "min": 4, "max": 9 },
+    "ph": { "min": 6, "max": 8 },
+    "temp": { "min": 28, "max": 32 },
+    "salinity": { "min": 28, "max": 33 },
+    "ammonia": { "min": 0, "max": 0.02 },
+    "nitrite": { "min": 0, "max": 0.01 },
+    "chlorine": { "min": 0, "max": 0.02 }
+  },
+  "sensors": {
+    "do": 6.27,
+    "ph": 7.9,
+    "temp": 29.7,
+    "salinity": 32.2,
+    "ammonia": 0.007,
+    "nitrite": 0.025,
+    "chlorine": 0.012,
+    "waterLevel": 82,
+    "uptime": 5166
+  },
+  "history": {
+    "do": [],
+    "ph": [],
+    "temp": [],
+    "salinity": [],
+    "ammonia": [],
+    "nitrite": [],
+    "chlorine": []
+  },
+  "historyWindow": 32,
+  "alertLog": [],
+  "runtime": {
+    "targets": {
+      "do": 6.27,
+      "ph": 7.9,
+      "temp": 29.7,
+      "salinity": 32.2,
+      "ammonia": 0.007,
+      "nitrite": 0.025,
+      "chlorine": 0.012,
+      "waterLevel": 82,
+      "uptime": 5166
+    },
+    "conditionFlags": {},
+    "cooldownByKey": {},
+    "targetUpdatedAt": 0,
+    "lastTickAt": 0,
+    "initialized": false
+  },
+  "updatedAt": 0
+}

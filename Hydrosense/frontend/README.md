@@ -54,19 +54,19 @@ Role is inferred at login and stored in local storage key `hydrosenseRole`.
 
 ## Realtime Sync (Admin and Operator)
 
-Sensor values, thresholds, alert states, and history window are now shared realtime.
+Sensor values, thresholds, alert states, and history window are shared through a Vercel backend API.
 
-- Default mode: local shared sync (same browser/device tabs)
-- Supabase mode: cross-device realtime sync (admin and operator on different devices)
+- Frontend polls `GET /api/state`
+- Frontend sends mutations to `POST /api/state`
+- Admin-only actions are enforced in API action handling
 
-To enable cross-device sync, create `frontend/.env` from `frontend/.env.example` and set:
+Optional local dev override:
 
 ```bash
-REACT_APP_SUPABASE_URL=your_supabase_project_url
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+REACT_APP_API_BASE=
 ```
 
-Without those env vars, the app still runs using local shared mode.
+Leave empty to use same-origin API.
 
 ## Dashboard Code Structure
 
@@ -96,12 +96,11 @@ If browser tab icon appears stale, hard refresh (`Ctrl+F5`) or reopen tab.
 
 ## Deployment Notes (Vercel)
 
-The repo supports either root-level deploy config or frontend-root deploy config:
+Deploy from repository root so both frontend build and root API functions are included.
 
-- Root config: `vercel.json`
-- Frontend config: `frontend/vercel.json`
-
-Use the config matching your Vercel project's Root Directory setting.
+- Frontend output is `frontend/build`
+- API routes are in `api/`
+- Backend state/data modules are in `backend/database/`
 
 ## Foolproof Deploy Flow
 
@@ -112,7 +111,7 @@ npm run vercel:link
 npm run vercel:deploy
 ```
 
-This always deploys from `frontend/` using `--cwd frontend`.
+This deploys from repository root.
 
 Extra safeguards in this repo:
 
