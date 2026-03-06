@@ -89,30 +89,34 @@ const writeToKv = async (state) => {
   }
 
   try {
-    const stateSize = JSON.stringify(state).length;
+    const stateJson = JSON.stringify(state);
+    const stateSize = stateJson.length;
     console.log(`[STORE:KV] Attempting to persist ${stateSize} bytes to Redis...`);
     
+    // POST to /set/{key} endpoint with the JSON as request body
+    // Upstash will store it as a string value
     const data = await fetchJsonSafe(`${kvBaseUrl}/set/${encodeURIComponent(kvStateKey)}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${kvToken}`,
-        'Content-Type': 'text/plain'
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(state)
+      body: stateJson
     });
 
-    if (data && data.result === 'OK') {
+    if (data && (data.result === 'OK' || data === 'OK')) {
       console.log('[STORE:KV] ✓ State persisted to Redis successfully');
       return true;
     } else {
       const responseStr = data ? JSON.stringify(data).substring(0, 300) : 'null';
       console.error('[STORE:KV] ✗ Redis write failed. Response:', responseStr);
-      console.error('[STORE:KV] Expected result "OK", got:', data?.result);
+      if (data && (data.error || data.message)) {
+        console.error('[STORE:KV] Error:', data.error || data.message);
+      }
       return false;
     }
   } catch (err) {
     console.error('[STORE:KV] ✗ Write exception:', err.message);
-    console.error('[STORE:KV] Stack:', err.stack);
     return false;
   }
 };
