@@ -85,7 +85,9 @@
   border: 1px solid rgba(242, 228, 208, 0.15);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-topbar {
@@ -316,8 +318,58 @@
 }
 
 .dashboard-page-content {
-  display: grid;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(110, 181, 183, 0.5) rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-page-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-page-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--shape-chip);
+}
+
+.dashboard-page-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(110, 181, 183, 0.7), rgba(77, 143, 149, 0.75));
+  border-radius: var(--shape-chip);
+  border: 2px solid rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-page-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(143, 211, 215, 0.85), rgba(110, 181, 183, 0.85));
+}
+
+/* Full-page single-card sections (profile, operators, alerts) */
+.page-fill-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-fill-section > .analysis-card {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(110, 181, 183, 0.4) rgba(255, 255, 255, 0.04);
+}
+
+.page-fill-section > .analysis-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.page-fill-section > .analysis-card::-webkit-scrollbar-thumb {
+  background: rgba(110, 181, 183, 0.5);
+  border-radius: var(--shape-chip);
 }
 
 .summary-card {
@@ -846,6 +898,27 @@
   gap: 12px;
 }
 
+.alerts-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.alert-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.alerts-page-list {
+  display: grid;
+  gap: 10px;
+  overflow-y: auto;
+}
+
 .theme-light {
   --text-high: #1d3438;
   --text-mid: rgba(22, 47, 51, 0.76);
@@ -932,6 +1005,27 @@
   .main-canvas {
     margin: 14px;
     padding: 14px;
+    overflow: auto;
+    display: block;
+  }
+
+  .dashboard-page-content {
+    display: block;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .dashboard-page-content > * + * {
+    margin-top: 14px;
+  }
+
+  .page-fill-section {
+    flex: none;
+    display: block;
+  }
+
+  .page-fill-section > .analysis-card {
+    overflow: visible;
   }
 
   .dashboard-topbar {

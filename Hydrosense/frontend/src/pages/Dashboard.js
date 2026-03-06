@@ -247,6 +247,8 @@ const Dashboard = () => {
           ? (
             <AlertsPageSection
               filteredAlerts={filteredAlerts}
+              alertFilter={alertFilter}
+              setAlertFilter={setAlertFilter}
               extractSensorKey={extractSensorKey}
               formatAlertTime={formatAlertTime}
               toggleRead={toggleRead}

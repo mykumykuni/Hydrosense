@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/Auth.css';
 import { setAuthSession } from '../utils/authStorage';
 import { getApiBase } from '../utils/apiBase';
+import { readJsonSafe } from '../utils/apiClient';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,14 +22,6 @@ const Login = () => {
     invalid_token: 'Session expired. Please login again.',
     invalid_response: 'Server returned an invalid response. Please try again.',
     auth_service_unavailable: 'Login service is unavailable. Please try again.'
-  };
-
-  const readJsonSafe = async (response) => {
-    try {
-      return await response.json();
-    } catch {
-      return { ok: false, error: 'invalid_response' };
-    }
   };
 
   const handleLoginSubmit = async (e) => {

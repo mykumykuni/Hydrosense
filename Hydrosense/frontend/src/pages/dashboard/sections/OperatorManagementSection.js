@@ -38,7 +38,7 @@ const OperatorManagementSection = ({
   };
 
   return (
-    <section className="operations-grid">
+    <section className="page-fill-section">
       <article className="analysis-card utility-card operator-mgmt-card">
         <div className="operator-mgmt-header">
           <div>

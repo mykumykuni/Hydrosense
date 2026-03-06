@@ -46,3 +46,11 @@ export const createApiClient = (apiBase, token) => {
     patchJson
   };
 };
+
+export const readJsonSafe = async (response) => {
+  try {
+    return await response.json();
+  } catch {
+    return { ok: false, error: 'invalid_response' };
+  }
+};

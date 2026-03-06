@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Auth.css';
 import { getApiBase } from '../utils/apiBase';
+import { readJsonSafe } from '../utils/apiClient';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -19,14 +20,6 @@ const SignUp = () => {
     email_exists: 'This email is already registered.',
     invalid_response: 'Server returned an invalid response. Please try again.',
     auth_service_unavailable: 'Registration service is unavailable. Please try again.'
-  };
-
-  const readJsonSafe = async (response) => {
-    try {
-      return await response.json();
-    } catch {
-      return { ok: false, error: 'invalid_response' };
-    }
   };
 
   const handleRegister = async (e) => {

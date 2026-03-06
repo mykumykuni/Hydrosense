@@ -26,7 +26,7 @@ const ProfileSection = ({
   const role = authUser?.role || (isAdmin ? 'admin' : 'operator');
 
   return (
-    <section className="operations-grid">
+    <section className="page-fill-section">
       <article className="analysis-card utility-card profile-card">
         <h3 className="mini-label">My Profile</h3>
 
