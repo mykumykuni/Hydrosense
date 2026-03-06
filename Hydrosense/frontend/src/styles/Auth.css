@@ -46,6 +46,8 @@
   box-shadow: var(--glass-shadow);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   justify-content: center;
   gap: 18px;
   animation: fadeSlideUp 500ms ease both;
@@ -63,12 +65,11 @@
   font-weight: 700;
 }
 
-.brand-name {
-  font-size: clamp(2.2rem, 6vw, 3.4rem);
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  line-height: 0.98;
-  text-shadow: 0 12px 40px rgba(7, 23, 30, 0.44);
+.brand-logo-image {
+  width: min(100%, 300px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 34px rgba(7, 23, 30, 0.44));
 }
 
 .project-sub {
@@ -76,8 +77,8 @@
   font-size: 0.95rem;
   line-height: 1.75;
   color: var(--text-mid);
-  border-left: 3px solid rgba(184, 223, 196, 0.62);
-  padding-left: 16px;
+  border-top: 3px solid rgba(184, 223, 196, 0.62);
+  padding-top: 12px;
 }
 
 .form-section {
@@ -103,6 +104,7 @@
 
 .login-header {
   margin-bottom: 26px;
+  text-align: center;
 }
 
 .login-header h2 {

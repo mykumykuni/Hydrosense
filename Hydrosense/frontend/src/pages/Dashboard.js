@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/Dashboard.css';
+import SummarySection from './dashboard/sections/SummarySection';
+import SensorsSection from './dashboard/sections/SensorsSection';
+import OperationsSectionAdmin from './dashboard/sections/OperationsSectionAdmin';
+import OperationsSectionOperator from './dashboard/sections/OperationsSectionOperator';
+import AlertsPageSection from './dashboard/sections/AlertsPageSection';
+import AlertModal from './dashboard/AlertModal';
 
 const limits = {
   do: { min: 4.0, max: 9.0, critical: 1.4, unit: 'mg/L', label: 'Dissolved Oxygen' },
@@ -16,10 +22,15 @@ const HISTORY_POINTS = 32;
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [themeMode, setThemeMode] = useState('dark');
-  const [role, setRole] = useState('operator');
-  const [mobileTab, setMobileTab] = useState('summary');
+  const [role] = useState(() => (localStorage.getItem('hydrosenseRole') === 'admin' ? 'admin' : 'operator'));
+  const [thresholds, setThresholds] = useState(
+    Object.fromEntries(
+      Object.keys(limits).map((key) => [key, { min: limits[key].min, max: limits[key].max }])
+    )
+  );
 
   const [sensors, setSensors] = useState({
     do: 6.27,
@@ -46,6 +57,8 @@ const Dashboard = () => {
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertFilter, setAlertFilter] = useState('all');
   const [focusSensorKey, setFocusSensorKey] = useState('');
+  const isAdmin = role === 'admin';
+  const currentPage = location.pathname.split('/')[2] || 'live';
 
   const pushAlert = (severity, title, message, source) => {
     const key = `${source}-${severity}`;
@@ -62,11 +75,14 @@ const Dashboard = () => {
         message,
         source,
         read: false,
+        resolved: false,
         ts: now
       },
       ...prev
     ]);
   };
+
+  const getRange = (key) => thresholds[key] || { min: limits[key].min, max: limits[key].max };
 
   useEffect(() => {
     pushAlert('info', 'System Initialized', 'Live sensor monitoring session started.', 'system');
@@ -117,10 +133,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     Object.keys(limits).forEach((key) => {
+      const range = thresholds[key] || { min: limits[key].min, max: limits[key].max };
       const limit = limits[key];
       const value = sensors[key];
 
-      const isOut = value < limit.min || value > limit.max;
+      const isOut = value < range.min || value > range.max;
       const wasOut = Boolean(conditionRef.current[`${key}-out`]);
       if (isOut && !wasOut) {
         pushAlert('warning', `${limit.label} Out of Range`, `${limit.label} is ${value.toFixed(3)} ${limit.unit}.`, `${key}-out`);
@@ -149,26 +166,28 @@ const Dashboard = () => {
 
     conditionRef.current['water-low'] = lowWater;
     conditionRef.current['water-high'] = highWater;
-  }, [sensors]);
+  }, [sensors, thresholds]);
 
   const getSensorState = (key, val) => {
+    const range = getRange(key);
     const limit = limits[key];
     if (limit.critical && (key === 'do' ? val <= limit.critical : val >= limit.critical)) {
       return { state: 'critical', label: 'Critical', cls: 'state-critical' };
     }
-    if (val < limit.min || val > limit.max) {
+    if (val < range.min || val > range.max) {
       return { state: 'warning', label: 'Warning', cls: 'state-warning' };
     }
     return { state: 'normal', label: 'Optimal', cls: 'state-normal' };
   };
 
   const getSensorInsight = (key, value) => {
+    const range = getRange(key);
     const limit = limits[key];
-    if (value < limit.min) {
-      return `Below target by ${(limit.min - value).toFixed(2)} ${limit.unit}`;
+    if (value < range.min) {
+      return `Below target by ${(range.min - value).toFixed(2)} ${limit.unit}`;
     }
-    if (value > limit.max) {
-      return `Above target by ${(value - limit.max).toFixed(2)} ${limit.unit}`;
+    if (value > range.max) {
+      return `Above target by ${(value - range.max).toFixed(2)} ${limit.unit}`;
     }
     return 'Operating inside ideal range';
   };
@@ -182,13 +201,6 @@ const Dashboard = () => {
       return { label: 'WATCH', hint: 'Slight quality drift, monitor frequently', tone: 'clarity-watch' };
     }
     return { label: 'CLEAR', hint: 'Water body is in stable condition', tone: 'clarity-clear' };
-  };
-
-  const formatUptime = (seconds) => {
-    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${h}:${m}:${s}`;
   };
 
   const extractSensorKey = (source) => {
@@ -208,8 +220,52 @@ const Dashboard = () => {
     setAlertLog([]);
   };
 
+  const resolveAlert = (id) => {
+    setAlertLog((prev) => prev.map((a) => (a.id === id ? { ...a, read: true, resolved: true } : a)));
+  };
+
   const createManualAlert = () => {
     pushAlert('info', 'Manual Operator Alert', 'Operator created a manual checkpoint alert.', 'manual-operator');
+  };
+
+  const reportOperatorIssue = () => {
+    pushAlert('warning', 'Operator Issue Reported', 'Operator requested admin review on live conditions.', 'operator-report');
+  };
+
+  const exportAlertHistory = () => {
+    const rows = [
+      ['time', 'severity', 'source', 'title', 'message', 'read', 'resolved'],
+      ...visibleAlerts.map((a) => [
+        new Date(a.ts).toISOString(),
+        a.severity,
+        a.source,
+        a.title,
+        a.message,
+        a.read ? 'true' : 'false',
+        a.resolved ? 'true' : 'false'
+      ])
+    ];
+    const csv = rows.map((row) => row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `hydrosense-alerts-${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const updateThreshold = (key, field, nextValue) => {
+    if (!isAdmin || Number.isNaN(nextValue)) return;
+    setThresholds((prev) => {
+      const current = prev[key] || { min: limits[key].min, max: limits[key].max };
+      const next = { ...current, [field]: nextValue };
+      if (field === 'min' && next.min >= next.max) next.min = +(next.max - 0.01).toFixed(3);
+      if (field === 'max' && next.max <= next.min) next.max = +(next.min + 0.01).toFixed(3);
+      return { ...prev, [key]: next };
+    });
   };
 
   const formatAlertTime = (ts) => {
@@ -219,7 +275,7 @@ const Dashboard = () => {
   const openRelatedSensor = (sensorKey) => {
     if (!sensorKey) return;
     setAlertModalOpen(false);
-    setMobileTab('sensors');
+    navigate('/dashboard/live');
     setFocusSensorKey(sensorKey);
 
     setTimeout(() => {
@@ -266,190 +322,96 @@ const Dashboard = () => {
   const healthySensorCount = sensorKeys.length - activeThresholdAlerts.length;
   const healthPercent = Math.round((healthySensorCount / sensorKeys.length) * 100);
 
-  const unreadCount = alertLog.filter((a) => !a.read).length;
+  const visibleAlerts = isAdmin ? alertLog : alertLog.filter((a) => a.source !== 'system');
+  const unreadCount = visibleAlerts.filter((a) => !a.read).length;
   const filteredAlerts = alertFilter === 'all'
-    ? alertLog
-    : alertLog.filter((a) => a.severity === alertFilter);
+    ? visibleAlerts
+    : visibleAlerts.filter((a) => a.severity === alertFilter);
 
   const themeClass = themeMode === 'light' ? 'theme-light' : 'theme-dark';
+  const roleClass = isAdmin ? 'role-admin' : 'role-operator';
 
-  const summarySection = (
-    <section className="summary-strip">
-      <article className={`summary-card utility-card ${clarity.tone}`}>
-        <span className="mini-label">Water Color / Clarity</span>
-        <p className="summary-value">{clarity.label}</p>
-        <p className="summary-note">{clarity.hint}</p>
-      </article>
-      <article className="summary-card utility-card">
-        <span className="mini-label">Active Alerts</span>
-        <p className="summary-value">{activeThresholdAlerts.length}</p>
-        <p className="summary-note">
-          {activeThresholdAlerts.length === 0 ? 'No active alarms in this cycle' : 'Immediate checks are recommended'}
-        </p>
-      </article>
-      <article className="summary-card utility-card health-card">
-        <span className="mini-label">Sensor Health</span>
-        <p className="summary-value">{healthPercent}%</p>
-        <p className="summary-note">{healthySensorCount} / {sensorKeys.length} sensors are in optimal range</p>
-      </article>
-    </section>
-  );
+  const utilitySection = isAdmin
+    ? (
+      <OperationsSectionAdmin
+        sensors={sensors}
+        limits={limits}
+        activeThresholdAlerts={activeThresholdAlerts}
+        alertLog={alertLog}
+        sensorKeys={sensorKeys}
+        getRange={getRange}
+        updateThreshold={updateThreshold}
+      />
+    )
+    : (
+      <OperationsSectionOperator
+        sensors={sensors}
+        onReportIssue={reportOperatorIssue}
+      />
+    );
 
-  const sensorsSection = (
-    <section className="sensor-layout">
-      <div className="priority-sensor-grid">
-        {prioritySensors.map((key) => {
-          const status = getSensorState(key, sensors[key]);
-          const precision = key === 'do' ? 2 : 1;
-          const value = sensors[key].toFixed(precision);
-          const trendColor = status.state === 'critical' ? '#de8a7f' : status.state === 'warning' ? '#eabf82' : '#8fd3d7';
-
-          return (
-            <article
-              key={key}
-              ref={(node) => {
-                sensorRefs.current[key] = node;
-              }}
-              className={`glass-kpi-card sensor-card priority-card ${status.cls} ${focusSensorKey === key ? 'focus-sensor' : ''}`}
-            >
-              <div className="sensor-head">
-                <span className="mini-label">{limits[key].label}</span>
-                <span className={`sensor-badge ${status.state}`}>{status.label}</span>
-              </div>
-              <div className="kpi-value priority-value">
-                {value}
-                <span className="kpi-unit">{limits[key].unit}</span>
-              </div>
-              <p className="sensor-range">Range: {limits[key].min} - {limits[key].max} {limits[key].unit}</p>
-              <p className="sensor-insight">{getSensorInsight(key, sensors[key])}</p>
-              {renderSparkline(history[key], trendColor)}
-              <div className="sensor-mini-stats">
-                <span>Min {limits[key].min}</span>
-                <span>Max {limits[key].max}</span>
-                <span>Now {value}</span>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-      <div className="secondary-sensor-grid">
-        {secondarySensors.map((key) => {
-          const status = getSensorState(key, sensors[key]);
-          const value = sensors[key].toFixed(3);
-          const trendColor = status.state === 'critical' ? '#de8a7f' : status.state === 'warning' ? '#eabf82' : '#8fd3d7';
-
-          return (
-            <article
-              key={key}
-              ref={(node) => {
-                sensorRefs.current[key] = node;
-              }}
-              className={`glass-kpi-card sensor-card compact-sensor-card ${status.cls} ${focusSensorKey === key ? 'focus-sensor' : ''}`}
-            >
-              <div className="sensor-head">
-                <span className="mini-label">{limits[key].label}</span>
-                <span className={`sensor-badge ${status.state}`}>{status.label}</span>
-              </div>
-              <div className="kpi-value compact-value">
-                {value}
-                <span className="kpi-unit">{limits[key].unit}</span>
-              </div>
-              {renderSparkline(history[key], trendColor)}
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-
-  const operationsSection = (
-    <section className="operations-grid">
-      <article className="analysis-card utility-card">
-        <h3 className="mini-label">ADMP Compliance Checklist</h3>
-        <div className="compliance-item">
-          <div className="status-dot" style={{ background: sensors.do < limits.do.min ? '#de8a7f' : '#6eb5b7' }}></div>
-          <span>DO level status [Standard: {'>'} 4.0]</span>
-        </div>
-        <div className="compliance-item">
-          <div className="status-dot" style={{ background: (sensors.ph < limits.ph.min || sensors.ph > limits.ph.max) ? '#eabf82' : '#6eb5b7' }}></div>
-          <span>pH buffering range check</span>
-        </div>
-        <div className="compliance-item">
-          <div className="status-dot" style={{ background: sensors.nitrite > 0.1 ? '#de8a7f' : '#6eb5b7' }}></div>
-          <span>Nitrogenous waste limit</span>
-        </div>
-      </article>
-
-      <article className="analysis-card utility-card">
-        <h3 className="mini-label">Water Level Control</h3>
-        <div className="water-level-visual">
-          <div className="water-tank">
-            <div className="water-tank-fill" style={{ height: `${sensors.waterLevel}%` }}>
-              <div className="water-wave water-wave-a"></div>
-              <div className="water-wave water-wave-b"></div>
-            </div>
-          </div>
-          <div className="water-level-meta-block">
-            <div className="water-level-value">{sensors.waterLevel}%</div>
-            <div className="water-level-markers">
-              <span>High: 95%</span>
-              <span>Target: 80%</span>
-              <span>Low: 55%</span>
-            </div>
-          </div>
-        </div>
-        <p className="water-level-meta">Inlet flow: ACTIVE | Drainage: CLOSED</p>
-      </article>
-    </section>
-  );
-
-  const mobileAlertsPane = (
-    <section className="mobile-alerts-pane">
-      <div className="analysis-card utility-card">
-        <h3 className="mini-label">Recent Alerts</h3>
-        {filteredAlerts.length === 0 ? (
-          <p className="water-level-meta">No alerts for selected filter.</p>
-        ) : (
-          filteredAlerts.slice(0, 8).map((item) => {
-            const sensorKey = extractSensorKey(item.source);
-            return (
-              <article key={item.id} className={`alert-item ${item.read ? 'read' : 'unread'}`}>
-                <div className="alert-item-head">
-                  <span className={`sensor-badge ${item.severity}`}>{item.severity}</span>
-                  <span className="water-level-meta">{formatAlertTime(item.ts)}</span>
-                </div>
-                <h4>{item.title}</h4>
-                <p>{item.message}</p>
-                <div className="mobile-alert-actions">
-                  <button className="btn-secondary" type="button" onClick={() => toggleRead(item.id)}>
-                    {item.read ? 'Mark Unread' : 'Mark Read'}
-                  </button>
-                  {sensorKey && (
-                    <button className="btn-secondary" type="button" onClick={() => openRelatedSensor(sensorKey)}>
-                      Open Sensor
-                    </button>
-                  )}
-                </div>
-              </article>
-            );
-          })
-        )}
-      </div>
-    </section>
-  );
+  const pageContent = currentPage === 'operations'
+    ? utilitySection
+    : currentPage === 'alerts'
+      ? (
+        <AlertsPageSection
+          filteredAlerts={filteredAlerts}
+          extractSensorKey={extractSensorKey}
+          formatAlertTime={formatAlertTime}
+          toggleRead={toggleRead}
+          openRelatedSensor={openRelatedSensor}
+        />
+      )
+      : (
+        <>
+          <SummarySection
+            clarity={clarity}
+            activeThresholdAlerts={activeThresholdAlerts}
+            healthPercent={healthPercent}
+            healthySensorCount={healthySensorCount}
+            sensorCount={sensorKeys.length}
+          />
+          <SensorsSection
+            prioritySensors={prioritySensors}
+            secondarySensors={secondarySensors}
+            limits={limits}
+            sensors={sensors}
+            history={history}
+            getRange={getRange}
+            getSensorState={getSensorState}
+            getSensorInsight={getSensorInsight}
+            renderSparkline={renderSparkline}
+            focusSensorKey={focusSensorKey}
+            sensorRefs={sensorRefs}
+          />
+        </>
+      );
 
   return (
-    <div className={`dashboard-workspace ${themeClass}`}>
+    <div className={`dashboard-workspace ${themeClass} ${roleClass}`}>
       <aside className="workspace-sidebar">
         <div className="sidebar-logo">
-          <div className="sidebar-logo-dot"></div>
-          <span className="sidebar-logo-text">HYDROSENSE</span>
+          <img className="sidebar-logo-image" src="/adjusted.png" alt="Hydrosense" />
         </div>
         <nav>
-          <div className="workspace-nav-item active">Live Monitoring</div>
-          <div className="workspace-nav-item">Rearing Schedule</div>
-          <div className="workspace-nav-item">ADMP Compliance</div>
+          <div
+            className={`workspace-nav-item ${currentPage === 'live' ? 'active' : ''}`}
+            onClick={() => navigate('/dashboard/live')}
+          >
+            Live Monitoring
+          </div>
+          <div
+            className={`workspace-nav-item ${currentPage === 'operations' ? 'active' : ''}`}
+            onClick={() => navigate('/dashboard/operations')}
+          >
+            {isAdmin ? 'Admin Controls' : 'Operator Tasks'}
+          </div>
+          <div
+            className={`workspace-nav-item ${currentPage === 'alerts' ? 'active' : ''}`}
+            onClick={() => navigate('/dashboard/alerts')}
+          >
+            {isAdmin ? 'Compliance Console' : 'Incident Reporting'}
+          </div>
         </nav>
       </aside>
 
@@ -457,113 +419,55 @@ const Dashboard = () => {
         <header className="dashboard-topbar">
           <div>
             <h1 className="command-title">Command Center</h1>
-            <p className="command-subtitle">Node: BFAR-10 Hatchery | Species: Milkfish (Fry)</p>
+            <p className="command-subtitle">
+              Node: BFAR-10 Hatchery | Species: Milkfish (Fry) | Mode: {isAdmin ? 'Admin Console' : 'Operator Console'}
+            </p>
           </div>
           <div className="topbar-actions">
-            <div className="role-toggle">
-              <button type="button" className={`role-chip ${role === 'operator' ? 'active' : ''}`} onClick={() => setRole('operator')}>Operator</button>
-              <button type="button" className={`role-chip ${role === 'admin' ? 'active' : ''}`} onClick={() => setRole('admin')}>Admin</button>
+            <div className={`uptime-widget topbar-fixed role-widget role-chip-display ${isAdmin ? 'admin' : 'operator'}`}>
+              <span className="mini-label">Role: {isAdmin ? 'Admin' : 'Operator'}</span>
             </div>
-            <button className="btn-secondary" onClick={() => setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))}>
+            <button className="btn-secondary topbar-fixed theme-btn" onClick={() => setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))}>
               {themeMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </button>
-            <button className="btn-secondary alert-btn" onClick={() => setAlertModalOpen(true)}>
+            <button className="btn-secondary topbar-fixed alert-btn" onClick={() => setAlertModalOpen(true)}>
               Alerts
               {unreadCount > 0 && <span className="alert-count-pill">{unreadCount}</span>}
             </button>
-            <div className="uptime-widget">
-              <span className="mini-label">Runtime: {formatUptime(sensors.uptime)}</span>
-            </div>
-            <button className="btn-secondary" onClick={() => navigate('/login')}>Logout</button>
+            {isAdmin && (
+              <button className="btn-secondary topbar-fixed export-btn" onClick={exportAlertHistory}>
+                Export Alerts
+              </button>
+            )}
+            <button className="btn-secondary topbar-fixed logout-btn" onClick={() => { localStorage.removeItem('hydrosenseRole'); navigate('/login'); }}>Logout</button>
           </div>
         </header>
 
         <div className="mobile-tabs" role="tablist" aria-label="Dashboard sections">
-          <button type="button" className={`mobile-tab-btn ${mobileTab === 'summary' ? 'active' : ''}`} onClick={() => setMobileTab('summary')}>Summary</button>
-          <button type="button" className={`mobile-tab-btn ${mobileTab === 'sensors' ? 'active' : ''}`} onClick={() => setMobileTab('sensors')}>Sensors</button>
-          <button type="button" className={`mobile-tab-btn ${mobileTab === 'alerts' ? 'active' : ''}`} onClick={() => setMobileTab('alerts')}>Alerts</button>
+          <button type="button" className={`mobile-tab-btn ${currentPage === 'live' ? 'active' : ''}`} onClick={() => navigate('/dashboard/live')}>Live</button>
+          <button type="button" className={`mobile-tab-btn ${currentPage === 'operations' ? 'active' : ''}`} onClick={() => navigate('/dashboard/operations')}>Ops</button>
+          <button type="button" className={`mobile-tab-btn ${currentPage === 'alerts' ? 'active' : ''}`} onClick={() => navigate('/dashboard/alerts')}>Alerts</button>
         </div>
 
-        <div className="desktop-only">
-          {summarySection}
-          {sensorsSection}
-          {operationsSection}
-        </div>
+        <div className="dashboard-page-content">{pageContent}</div>
 
-        <div className="mobile-only">
-          {mobileTab === 'summary' && (
-            <>
-              {summarySection}
-              {operationsSection}
-            </>
-          )}
-          {mobileTab === 'sensors' && sensorsSection}
-          {mobileTab === 'alerts' && mobileAlertsPane}
-        </div>
-
-        {alertModalOpen && (
-          <div className="alert-modal-backdrop" onClick={() => setAlertModalOpen(false)}>
-            <section className="alert-modal" onClick={(e) => e.stopPropagation()}>
-              <header className="alert-modal-header">
-                <div>
-                  <h2>Alert Center</h2>
-                  <p>{alertLog.length} total alerts</p>
-                </div>
-                <button className="btn-secondary" onClick={() => setAlertModalOpen(false)}>Close</button>
-              </header>
-
-              <div className="alert-toolbar">
-                <div className="alert-filters">
-                  {['all', 'info', 'warning', 'critical'].map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      className={`filter-chip ${alertFilter === item ? 'active' : ''}`}
-                      onClick={() => setAlertFilter(item)}
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-                <div className="alert-actions">
-                  {role === 'admin' && <button className="btn-secondary" type="button" onClick={createManualAlert}>Manual Alert</button>}
-                  <button className="btn-secondary" type="button" onClick={markAllRead}>Mark All Read</button>
-                  {role === 'admin' && <button className="btn-secondary" type="button" onClick={clearAllAlerts}>Clear All</button>}
-                </div>
-              </div>
-
-              <div className="alert-list">
-                {filteredAlerts.length === 0 ? (
-                  <p className="water-level-meta">No alerts for selected filter.</p>
-                ) : (
-                  filteredAlerts.map((item) => {
-                    const sensorKey = extractSensorKey(item.source);
-                    return (
-                      <article key={item.id} className={`alert-item ${item.read ? 'read' : 'unread'}`}>
-                        <div className="alert-item-head">
-                          <span className={`sensor-badge ${item.severity}`}>{item.severity}</span>
-                          <span className="water-level-meta">{formatAlertTime(item.ts)}</span>
-                        </div>
-                        <h4>{item.title}</h4>
-                        <p>{item.message}</p>
-                        <div className="modal-alert-actions">
-                          <button className="btn-secondary" type="button" onClick={() => toggleRead(item.id)}>
-                            {item.read ? 'Mark Unread' : 'Mark Read'}
-                          </button>
-                          {sensorKey && (
-                            <button className="btn-secondary" type="button" onClick={() => openRelatedSensor(sensorKey)}>
-                              Open Sensor
-                            </button>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })
-                )}
-              </div>
-            </section>
-          </div>
-        )}
+        <AlertModal
+          isOpen={alertModalOpen}
+          onClose={() => setAlertModalOpen(false)}
+          visibleAlerts={visibleAlerts}
+          alertFilter={alertFilter}
+          setAlertFilter={setAlertFilter}
+          isAdmin={isAdmin}
+          createManualAlert={createManualAlert}
+          markAllRead={markAllRead}
+          clearAllAlerts={clearAllAlerts}
+          filteredAlerts={filteredAlerts}
+          extractSensorKey={extractSensorKey}
+          formatAlertTime={formatAlertTime}
+          toggleRead={toggleRead}
+          resolveAlert={resolveAlert}
+          openRelatedSensor={openRelatedSensor}
+        />
       </main>
     </div>
   );

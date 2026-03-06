@@ -4,9 +4,12 @@ import '../styles/Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = React.useState('');
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
+    const inferredRole = email.toLowerCase().includes('admin') ? 'admin' : 'operator';
+    localStorage.setItem('hydrosenseRole', inferredRole);
     navigate('/dashboard');
   };
 
@@ -14,7 +17,7 @@ const Login = () => {
     <div className="app-container">
       <header className="water-header">
         <div className="brand-tag">IOT MONITORING</div>
-        <h1 className="brand-name">HYDROSENSE</h1>
+        <img className="brand-logo-image" src="/adjusted%20dd.png" alt="Hydrosense" />
         <p className="project-sub">
           Real-Time Water Quality Monitoring System for <br />
           <strong>Milkfish (Chanos chanos)</strong> Aquaculture.
@@ -31,7 +34,14 @@ const Login = () => {
 
             <div style={{ marginBottom: '18px' }}>
               <label className="input-label">Email</label>
-              <input className="input-field" type="email" placeholder="Email Address" required />
+              <input
+                className="input-field"
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
 
             <div style={{ marginBottom: '30px' }}>

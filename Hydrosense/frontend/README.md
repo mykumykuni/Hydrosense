@@ -1,70 +1,88 @@
-# Getting Started with Create React App
+# Hydrosense Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This folder contains the React frontend for Hydrosense water quality monitoring.
 
-## Available Scripts
+## Quick Start
 
-In the project directory, you can run:
+```bash
+cd frontend
+npm install
+npm start
+```
 
-### `npm start`
+App runs at `http://localhost:3000`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Production build:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+npm run build
+```
 
-### `npm test`
+## Dashboard Routing
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The dashboard is split into route-based pages:
 
-### `npm run build`
+- `/dashboard/live` - live summary + sensor cards
+- `/dashboard/operations` - role-specific operations panels
+- `/dashboard/alerts` - alert feed page
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+`/dashboard/*` is handled by `src/pages/Dashboard.js`.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Role Behavior
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Role is inferred at login and stored in local storage key `hydrosenseRole`.
 
-### `npm run eject`
+- Email contains `admin` -> `admin`
+- Otherwise -> `operator`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Operator
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Can monitor live sensors and summaries
+- Can view alerts and mark read/unread
+- Can mark all alerts as read
+- Can report issue to admin
+- Cannot edit thresholds, export alerts, clear all alerts, or resolve alerts
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Admin
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Has all operator visibility
+- Can create manual alerts
+- Can clear all alerts
+- Can resolve alerts
+- Can export alerts to CSV
+- Can edit per-sensor min/max thresholds in Admin Threshold Manager
 
-## Learn More
+## Dashboard Code Structure
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Main container/orchestrator:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `src/pages/Dashboard.js`
 
-### Code Splitting
+Extracted dashboard modules:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- `src/pages/dashboard/AlertModal.js`
+- `src/pages/dashboard/sections/SummarySection.js`
+- `src/pages/dashboard/sections/SensorsSection.js`
+- `src/pages/dashboard/sections/WaterLevelSection.js`
+- `src/pages/dashboard/sections/OperationsSectionAdmin.js`
+- `src/pages/dashboard/sections/OperationsSectionOperator.js`
+- `src/pages/dashboard/sections/AlertsPageSection.js`
 
-### Analyzing the Bundle Size
+## UI and Assets
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- Dashboard logo: `public/adjusted.png`
+- Login/Register logo: `public/adjusted dd.png`
+- Favicon/App icon references are configured in:
+	- `public/index.html`
+	- `public/manifest.json`
 
-### Making a Progressive Web App
+If browser tab icon appears stale, hard refresh (`Ctrl+F5`) or reopen tab.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Deployment Notes (Vercel)
 
-### Advanced Configuration
+The repo supports either root-level deploy config or frontend-root deploy config:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- Root config: `vercel.json`
+- Frontend config: `frontend/vercel.json`
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Use the config matching your Vercel project's Root Directory setting.

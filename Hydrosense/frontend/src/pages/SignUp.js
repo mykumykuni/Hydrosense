@@ -9,7 +9,7 @@ const SignUp = () => {
     <div className="app-container">
       <header className="water-header">
         <div className="brand-tag">IOT MONITORING</div>
-        <h1 className="brand-name">HYDROSENSE</h1>
+        <img className="brand-logo-image" src="/adjusted%20dd.png" alt="Hydrosense" />
         <p className="project-sub">Create a new operator account to access the terminal.</p>
       </header>
 
