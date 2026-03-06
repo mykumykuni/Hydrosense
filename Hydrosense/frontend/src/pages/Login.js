@@ -12,27 +12,24 @@ const Login = () => {
 
   return (
     <div className="app-container">
-      {/* Left Branding Panel */}
       <header className="water-header">
         <div className="brand-tag">IOT MONITORING</div>
         <h1 className="brand-name">HYDROSENSE</h1>
-        {/* FIXED: Balanced the <p> tag here */}
         <p className="project-sub">
           Real-Time Water Quality Monitoring System for <br />
           <strong>Milkfish (Chanos chanos)</strong> Aquaculture.
         </p>
       </header>
 
-      {/* Right Form Panel */}
       <main className="form-section">
         <div className="glass-card">
           <form onSubmit={handleLoginSubmit}>
             <div className="login-header">
-              <h2 style={{ fontWeight: 900, fontSize: '1.8rem' }}>OPERATOR LOGIN</h2>
-              <p style={{ opacity: 0.6, fontSize: '0.9rem' }}>Access hatchery management terminal.</p>
+              <h2>OPERATOR LOGIN</h2>
+              <p>Access hatchery management terminal.</p>
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '18px' }}>
               <label className="input-label">Email</label>
               <input className="input-field" type="email" placeholder="Email Address" required />
             </div>

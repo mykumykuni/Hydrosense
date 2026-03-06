@@ -16,7 +16,10 @@ const SignUp = () => {
       <main className="form-section">
         <div className="glass-card">
           <form onSubmit={(e) => { e.preventDefault(); navigate('/login'); }}>
-            <h2 style={{fontWeight: 900, marginBottom: '20px'}}>NEW OPERATOR</h2>
+            <div className="login-header">
+              <h2>NEW OPERATOR</h2>
+              <p>Create secure credentials for hatchery terminal access.</p>
+            </div>
             
             <label className="input-label">Full Name</label>
             <input className="input-field" type="text" placeholder="Juan Dela Cruz" required />

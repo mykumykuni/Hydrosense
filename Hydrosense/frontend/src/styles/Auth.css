@@ -1,104 +1,163 @@
-/* ROOT LAYOUT */
 .app-container {
-  display: flex !important;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(320px, 42%) minmax(420px, 58%);
   width: 100vw;
   height: 100vh;
-  flex-direction: row;
+  overflow: hidden;
 }
 
-/* LEFT PANEL (Branding) */
+.app-container::before {
+  content: '';
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  right: -100px;
+  top: -110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(184, 223, 196, 0.34) 0%, rgba(184, 223, 196, 0) 72%);
+  pointer-events: none;
+}
+
+.app-container::after {
+  content: '';
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  left: 44%;
+  bottom: -200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(213, 162, 111, 0.26) 0%, rgba(213, 162, 111, 0) 72%);
+  pointer-events: none;
+}
+
 .water-header {
-  flex: 0 0 40%;
-  background: linear-gradient(135deg, #001f3f 0%, #004e92 100%);
-  padding: 60px;
+  position: relative;
+  z-index: 1;
+  margin: 22px;
+  border-radius: var(--radius-xl);
+  padding: 56px 48px;
+  border: 1px solid rgba(242, 228, 208, 0.24);
+  background:
+    linear-gradient(150deg, rgba(184, 223, 196, 0.2) 0%, rgba(213, 162, 111, 0.1) 45%, rgba(24, 24, 29, 0.45) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--glass-shadow);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border-right: 1px solid var(--glass-border);
+  gap: 18px;
+  animation: fadeSlideUp 500ms ease both;
 }
 
-.brand-tag { font-size: 0.8rem; letter-spacing: 3px; color: var(--safe-green); font-weight: 800; margin-bottom: 10px; }
-.brand-name { font-weight: 900; font-size: 2.8rem; margin-bottom: 20px; line-height: 1; }
-.project-sub { font-size: 1rem; opacity: 0.7; line-height: 1.6; border-left: 3px solid var(--safe-green); padding-left: 20px; }
+.brand-tag {
+  width: fit-content;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 228, 208, 0.28);
+  background: rgba(45, 38, 33, 0.35);
+  font-size: 0.7rem;
+  letter-spacing: 0.17em;
+  color: #bffdf5;
+  font-weight: 700;
+}
 
-/* RIGHT PANEL (Form Section) */
+.brand-name {
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 0.98;
+  text-shadow: 0 12px 40px rgba(7, 23, 30, 0.44);
+}
+
+.project-sub {
+  max-width: 30ch;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text-mid);
+  border-left: 3px solid rgba(184, 223, 196, 0.62);
+  padding-left: 16px;
+}
+
 .form-section {
-  flex: 1;
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  
-  /* NEW: Milkfish Hatchery Tank Background */
-  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
-              url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2070') center/cover;
+  padding: 28px;
 }
 
-/* THE LIQUID GLASS CARD */
 .glass-card {
+  width: min(100%, 480px);
+  border-radius: var(--radius-xl);
+  padding: 34px;
+  animation: fadeSlideUp 620ms ease both;
+  background: var(--glass-bg), var(--glass-bg-soft);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
+}
+
+.login-header {
+  margin-bottom: 26px;
+}
+
+.login-header h2 {
+  font-size: 1.72rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.login-header p {
+  color: var(--text-mid);
+  font-size: 0.86rem;
+}
+
+.register-link-btn {
+  margin-top: 16px;
   width: 100%;
-  max-width: 450px;
-  padding: 50px;
-  background: var(--glass-bg) !important;
-  backdrop-filter: var(--glass-blur) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 24px;
-  box-shadow: var(--glass-shadow) !important;
-}
-
-/* LOGIN FORM SPECIFICS */
-.login-header { margin-bottom: 30px; text-align: left; }
-.login-header h2 { font-weight: 900; fontSize: 1.8rem; }
-.login-header p { opacity: 0.6; fontSize: 0.9rem; }
-
-/* REGISTER LINK BUTTON */
-.register-link-btn {
-  all: unset !important;
-  box-sizing: border-box !important;
-  display: block !important;
-  width: 100% !important;
-  text-align: center !important;
-  margin-top: 20px !important;
-  color: var(--bangus-silver) !important;
-  font-size: 0.85rem !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 2px !important;
-  cursor: pointer !important;
-}
-
-.register-link-btn:hover { 
-  color: var(--safe-green) !important;
-  background: rgba(46, 204, 113, 0.05) !important;
-  border-radius: 8px;
-}
-
-/* --- REGISTER/BACK BUTTON RESTORATION --- */
-.register-link-btn {
-  display: block !important;
-  width: 100% !important;
-  margin-top: 25px !important;
-  padding: 15px !important;
-  
-  /* Resetting defaults without killing the button */
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 12px !important;
-  
-  /* Text Styling */
-  color: var(--bangus-silver) !important;
-  font-size: 0.8rem !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 2px !important;
-  text-align: center !important;
-  
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
+  border: 1px solid rgba(242, 228, 208, 0.2);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  background: linear-gradient(175deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  color: var(--text-mid);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 220ms ease, color 220ms ease, border-color 220ms ease;
 }
 
 .register-link-btn:hover {
-  background: rgba(46, 204, 113, 0.1) !important; /* Slight green glow */
-  border-color: var(--safe-green) !important;
-  color: var(--safe-green) !important;
   transform: translateY(-2px);
+  color: #f3e8d9;
+  border-color: rgba(242, 228, 208, 0.4);
+}
+
+@media (max-width: 1040px) {
+  .app-container {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
+  .water-header {
+    margin: 18px;
+    padding: 34px 26px;
+    min-height: 220px;
+  }
+
+  .form-section {
+    padding-top: 0;
+    padding-bottom: 20px;
+  }
+
+  .glass-card {
+    padding: 26px;
+  }
 }
