@@ -42,13 +42,11 @@ module.exports = async (req, res) => {
 
   const auth = getAuthenticatedUser(state, req);
   if (!auth.ok) {
-    await saveState(state);
     res.status(401).send(JSON.stringify({ ok: false, error: auth.error }));
     return;
   }
 
   if (auth.user.role !== 'admin') {
-    await saveState(state);
     res.status(403).send(JSON.stringify({ ok: false, error: 'admin_only' }));
     return;
   }
@@ -57,17 +55,12 @@ module.exports = async (req, res) => {
     const search = req.query?.search || '';
     const operators = listOperators(state, search);
     const pendingCount = operators.filter((user) => user.status === 'pending').length;
-    
-    console.log(`[OPERATORS:GET] Found ${operators.length} operators (${pendingCount} pending)`);
-    console.log(`[OPERATORS:GET] Total users in state: ${state.users.length}, Operators: ${state.users.filter(u => u.role === 'operator').length}`);
-    
-    await saveState(state);
+    // Never saveState on a GET — writing stale state back overwrites concurrent mutations.
     res.status(200).send(JSON.stringify({ ok: true, operators, pendingCount }));
     return;
   }
 
   if (req.method !== 'POST') {
-    await saveState(state);
     res.status(405).send(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
     return;
   }
@@ -78,7 +71,6 @@ module.exports = async (req, res) => {
 
   const target = state.users.find((user) => user.id === targetId && user.role === 'operator');
   if (!target) {
-    await saveState(state);
     res.status(404).send(JSON.stringify({ ok: false, error: 'operator_not_found' }));
     return;
   }
@@ -106,7 +98,6 @@ module.exports = async (req, res) => {
     if (!target.approvedAt) target.approvedAt = Date.now();
     target.updatedAt = Date.now();
   } else {
-    await saveState(state);
     res.status(400).send(JSON.stringify({ ok: false, error: 'unknown_action' }));
     return;
   }

@@ -59,9 +59,8 @@ module.exports = async (req, res) => {
 
   if (action === 'login') {
     const result = loginUser(state, body.payload || {});
-    state.updatedAt = Date.now();
-    await saveState(state);
-
+    // Login uses stateless signed tokens — no KV write needed for auth itself.
+    // lastLoginAt is a nice-to-have but stale overwrites of concurrent mutations cost more.
     if (!result.ok) {
       res.status(401).send(JSON.stringify({ ok: false, error: result.error }));
       return;
