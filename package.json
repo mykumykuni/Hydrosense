@@ -1,0 +1,11 @@
+{
+  "name": "hydrosense-root",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Root build wrapper for Vercel",
+  "scripts": {
+    "vercel-build": "npm run vercel-build --prefix Hydrosense",
+    "vercel:deploy": "npm run vercel:deploy --prefix Hydrosense",
+    "vercel:link": "npm run vercel:link --prefix Hydrosense"
+  }
+}
