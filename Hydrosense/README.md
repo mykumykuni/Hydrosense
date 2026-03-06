@@ -10,6 +10,21 @@ Hydrosense runs a React frontend with a Vercel serverless backend API for shared
 
 The database/state folder is intentionally outside `frontend/`.
 
+### Frontend Component Structure
+
+The dashboard was refactored into a component-based structure to improve maintainability and reuse:
+
+- Composition root: `frontend/src/pages/Dashboard.js`
+- Data hooks:
+  - `frontend/src/hooks/useDashboardData.js`
+  - `frontend/src/hooks/useProfileAndOperators.js`
+- Shared API helper: `frontend/src/utils/apiClient.js`
+- Monitoring constants: `frontend/src/constants/monitoring.js`
+- Layout components:
+  - `frontend/src/pages/dashboard/DashboardSidebar.js`
+  - `frontend/src/pages/dashboard/DashboardTopbar.js`
+  - `frontend/src/pages/dashboard/DashboardMobileTabs.js`
+
 ## Features
 
 - Shared sensor state across admin/operator via backend API
