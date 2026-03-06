@@ -30,7 +30,6 @@ module.exports = async (req, res) => {
 
   const auth = getAuthenticatedUser(state, req);
   if (!auth.ok) {
-    await saveState(state);
     res.status(401).send(JSON.stringify({ ok: false, error: auth.error }));
     return;
   }
@@ -38,20 +37,12 @@ module.exports = async (req, res) => {
   const user = auth.user;
 
   if (req.method === 'GET') {
-    await saveState(state);
     res.status(200).send(JSON.stringify({ ok: true, user: sanitizeUser(user) }));
     return;
   }
 
   if (req.method !== 'PATCH') {
-    await saveState(state);
     res.status(405).send(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
-    return;
-  }
-
-  if (user.role !== 'operator') {
-    await saveState(state);
-    res.status(403).send(JSON.stringify({ ok: false, error: 'operators_only' }));
     return;
   }
 
@@ -60,7 +51,6 @@ module.exports = async (req, res) => {
 
   const nextPhoto = String(payload.photoDataUrl || profile.photoDataUrl || '');
   if (nextPhoto.length > MAX_PHOTO_LENGTH) {
-    await saveState(state);
     res.status(400).send(JSON.stringify({ ok: false, error: 'photo_too_large' }));
     return;
   }

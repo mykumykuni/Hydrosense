@@ -97,6 +97,17 @@ module.exports = async (req, res) => {
     target.deactivatedAt = null;
     if (!target.approvedAt) target.approvedAt = Date.now();
     target.updatedAt = Date.now();
+  } else if (action === 'remove_operator') {
+    if (target.status === 'active') {
+      res.status(400).send(JSON.stringify({ ok: false, error: 'deactivate_before_removing' }));
+      return;
+    }
+    // Remove the user and their sessions permanently.
+    const idx = state.users.findIndex((u) => u.id === targetId);
+    if (idx !== -1) state.users.splice(idx, 1);
+    Object.keys(state.sessions || {}).forEach((tok) => {
+      if (state.sessions[tok]?.userId === targetId) delete state.sessions[tok];
+    });
   } else {
     res.status(400).send(JSON.stringify({ ok: false, error: 'unknown_action' }));
     return;

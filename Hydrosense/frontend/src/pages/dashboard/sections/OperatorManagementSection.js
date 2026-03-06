@@ -6,6 +6,17 @@ const statusTone = {
   deactivated: '#de8a7f'
 };
 
+const getInitials = (name, email) => {
+  const n = String(name || '').trim();
+  if (n) {
+    const parts = n.split(' ').filter(Boolean);
+    return parts.length > 1
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0].slice(0, 2).toUpperCase();
+  }
+  return String(email || '?')[0].toUpperCase();
+};
+
 const OperatorManagementSection = ({
   operators,
   pendingCount,
@@ -14,49 +25,108 @@ const OperatorManagementSection = ({
   onApprove,
   onDeactivate,
   onReactivate,
+  onRemove,
   onRefresh,
   error,
   loading
 }) => {
+  const handleRemove = (operator) => {
+    const name = operator.profile?.displayName || operator.email;
+    if (window.confirm(`Remove "${name}" permanently? This cannot be undone.`)) {
+      onRemove(operator.id);
+    }
+  };
+
   return (
     <section className="operations-grid">
-      <article className="analysis-card utility-card">
-        <h3 className="mini-label">Operator Profiles</h3>
-        <p className="water-level-meta">Pending approvals: {pendingCount}</p>
-
-        <div style={{ marginTop: '10px', marginBottom: '4px' }}>
-          <button className="btn-secondary" onClick={onRefresh} disabled={loading}>Refresh List</button>
+      <article className="analysis-card utility-card operator-mgmt-card">
+        <div className="operator-mgmt-header">
+          <div>
+            <h3 className="mini-label">Operator Management</h3>
+            <p className="water-level-meta" style={{ marginTop: '4px' }}>
+              {pendingCount > 0 ? `${pendingCount} pending approval` : 'All operators reviewed'}
+            </p>
+          </div>
+          <button className="btn-secondary" onClick={onRefresh} disabled={loading}>
+            {loading ? '…' : 'Refresh'}
+          </button>
         </div>
 
-        <div style={{ marginTop: '12px', marginBottom: '12px' }}>
-          <label className="input-label">Search by name/email</label>
-          <input className="input-field" value={search} onChange={(e) => onSearch(e.target.value)} placeholder="Search operators" />
+        <div className="operator-search">
+          <input
+            className="input-field"
+            value={search}
+            onChange={(e) => onSearch(e.target.value)}
+            placeholder="Search by name or email…"
+          />
         </div>
 
-        {loading && <p className="water-level-meta">Loading operators...</p>}
-        {error && <p className="water-level-meta" style={{ color: '#de8a7f' }}>{error}</p>}
+        {error && <p className="profile-msg profile-msg-error">{error}</p>}
+        {loading && operators.length === 0 && (
+          <p className="water-level-meta">Loading operators…</p>
+        )}
 
-        {operators.map((operator) => (
-          <article key={operator.id} className="alert-item" style={{ marginTop: '12px' }}>
-            <div className="alert-item-head">
-              <span className="sensor-badge" style={{ backgroundColor: statusTone[operator.status] || '#6eb5b7' }}>{operator.status}</span>
-              <span className="water-level-meta">{operator.email}</span>
-            </div>
-            <h4>{operator.profile?.displayName || 'Unnamed Operator'}</h4>
-            <p>{operator.profile?.position || 'No position set'}</p>
-            <div className="mobile-alert-actions">
-              {operator.status === 'pending' && (
-                <button className="btn-secondary" onClick={() => onApprove(operator.id)}>Approve</button>
-              )}
-              {operator.status === 'active' && (
-                <button className="btn-secondary" onClick={() => onDeactivate(operator.id)}>Deactivate</button>
-              )}
-              {operator.status === 'deactivated' && (
-                <button className="btn-secondary" onClick={() => onReactivate(operator.id)}>Reactivate</button>
-              )}
-            </div>
-          </article>
-        ))}
+        <div className="operator-list">
+          {operators.map((operator) => (
+            <article key={operator.id} className="operator-card">
+              <div className="operator-card-avatar">
+                {operator.profile?.photoDataUrl ? (
+                  <img className="operator-avatar-img" src={operator.profile.photoDataUrl} alt="avatar" />
+                ) : (
+                  <span className="operator-avatar-initials">
+                    {getInitials(operator.profile?.displayName, operator.email)}
+                  </span>
+                )}
+              </div>
+              <div className="operator-card-body">
+                <div className="operator-card-top">
+                  <div className="operator-info">
+                    <p className="operator-name">
+                      {operator.profile?.displayName || 'Unnamed Operator'}
+                    </p>
+                    <p className="operator-email">{operator.email}</p>
+                    {operator.profile?.position && (
+                      <p className="operator-meta">{operator.profile.position}</p>
+                    )}
+                  </div>
+                  <span
+                    className="sensor-badge"
+                    style={{ backgroundColor: statusTone[operator.status], color: '#0e1a1c', flexShrink: 0 }}
+                  >
+                    {operator.status}
+                  </span>
+                </div>
+                <div className="operator-card-actions">
+                  {operator.status === 'pending' && (
+                    <>
+                      <button className="btn-secondary" onClick={() => onApprove(operator.id)}>
+                        Approve
+                      </button>
+                      <button className="btn-danger" onClick={() => handleRemove(operator)}>
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  {operator.status === 'active' && (
+                    <button className="btn-secondary" onClick={() => onDeactivate(operator.id)}>
+                      Deactivate
+                    </button>
+                  )}
+                  {operator.status === 'deactivated' && (
+                    <>
+                      <button className="btn-secondary" onClick={() => onReactivate(operator.id)}>
+                        Reactivate
+                      </button>
+                      <button className="btn-danger" onClick={() => handleRemove(operator)}>
+                        Remove
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
 
         {!loading && operators.length === 0 && (
           <p className="water-level-meta">No operators found.</p>
@@ -67,3 +137,4 @@ const OperatorManagementSection = ({
 };
 
 export default OperatorManagementSection;
+

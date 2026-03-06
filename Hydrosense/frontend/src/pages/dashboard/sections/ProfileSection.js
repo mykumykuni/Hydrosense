@@ -1,7 +1,20 @@
 import React from 'react';
 
+const getInitials = (name, email) => {
+  const n = String(name || '').trim();
+  if (n) {
+    const parts = n.split(' ').filter(Boolean);
+    return parts.length > 1
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0].slice(0, 2).toUpperCase();
+  }
+  return String(email || '?')[0].toUpperCase();
+};
+
 const ProfileSection = ({
   profile,
+  authUser,
+  isAdmin,
   onChange,
   onPhotoChange,
   onSave,
@@ -9,70 +22,111 @@ const ProfileSection = ({
   saveMessage,
   saveError
 }) => {
+  const initials = getInitials(profile.displayName, authUser?.email);
+  const role = authUser?.role || (isAdmin ? 'admin' : 'operator');
+
   return (
     <section className="operations-grid">
-      <article className="analysis-card utility-card">
-        <h3 className="mini-label">Operator Profile</h3>
-        <p className="water-level-meta">Customize your account details visible to admin.</p>
+      <article className="analysis-card utility-card profile-card">
+        <h3 className="mini-label">My Profile</h3>
 
-        <div style={{ marginTop: '14px', marginBottom: '14px' }}>
-          {profile.photoDataUrl ? (
-            <img
-              src={profile.photoDataUrl}
-              alt="Profile"
-              style={{ width: '96px', height: '96px', borderRadius: '14px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }}
+        {/* Avatar + identity header */}
+        <div className="profile-header">
+          <div className="profile-avatar">
+            {profile.photoDataUrl ? (
+              <img className="profile-avatar-img" src={profile.photoDataUrl} alt="Profile" />
+            ) : (
+              <span className="profile-avatar-initials">{initials}</span>
+            )}
+          </div>
+          <div className="profile-header-info">
+            <p className="profile-display-name">
+              {profile.displayName || 'No display name set'}
+            </p>
+            <p className="profile-email">{authUser?.email || ''}</p>
+            {profile.position && (
+              <p className="profile-position-text">{profile.position}</p>
+            )}
+            <span className={`sensor-badge profile-role-badge ${role}`}>{role}</span>
+          </div>
+        </div>
+
+        {/* Photo upload */}
+        <div className="profile-photo-upload">
+          <label className="input-label">Profile Photo</label>
+          <input className="input-field" type="file" accept="image/*" onChange={onPhotoChange} />
+        </div>
+
+        {/* Two-column field grid */}
+        <div className="profile-fields-grid">
+          <div className="profile-field">
+            <label className="input-label">Display Name</label>
+            <input
+              className="input-field"
+              value={profile.displayName || ''}
+              onChange={(e) => onChange('displayName', e.target.value)}
+              placeholder="Your full name"
             />
-          ) : (
-            <div style={{ width: '96px', height: '96px', borderRadius: '14px', background: 'rgba(255,255,255,0.08)', display: 'grid', placeItems: 'center' }}>
-              No Photo
-            </div>
-          )}
+          </div>
+
+          <div className="profile-field">
+            <label className="input-label">Phone</label>
+            <input
+              className="input-field"
+              value={profile.phone || ''}
+              onChange={(e) => onChange('phone', e.target.value)}
+              placeholder="+63 900 000 0000"
+            />
+          </div>
+
+          <div className="profile-field">
+            <label className="input-label">Position / Title</label>
+            <input
+              className="input-field"
+              value={profile.position || ''}
+              onChange={(e) => onChange('position', e.target.value)}
+              placeholder="e.g. Senior Operator"
+            />
+          </div>
+
+          <div className="profile-field">
+            <label className="input-label">Emergency Contact</label>
+            <input
+              className="input-field"
+              value={profile.emergencyContact || ''}
+              onChange={(e) => onChange('emergencyContact', e.target.value)}
+              placeholder="Name — number"
+            />
+          </div>
+
+          <div className="profile-field profile-field-full">
+            <label className="input-label">Address</label>
+            <input
+              className="input-field"
+              value={profile.address || ''}
+              onChange={(e) => onChange('address', e.target.value)}
+              placeholder="Your address"
+            />
+          </div>
+
+          <div className="profile-field profile-field-full">
+            <label className="input-label">Bio</label>
+            <textarea
+              className="input-field"
+              rows={3}
+              value={profile.bio || ''}
+              onChange={(e) => onChange('bio', e.target.value)}
+              placeholder="Brief description about yourself…"
+              style={{ resize: 'vertical', paddingTop: '12px' }}
+            />
+          </div>
         </div>
 
-        <label className="input-label">Photo</label>
-        <input className="input-field" type="file" accept="image/*" onChange={onPhotoChange} />
+        {saveError && <p className="profile-msg profile-msg-error">{saveError}</p>}
+        {saveMessage && <p className="profile-msg profile-msg-success">{saveMessage}</p>}
 
-        <div style={{ marginTop: '14px' }}>
-          <label className="input-label">Display Name</label>
-          <input className="input-field" value={profile.displayName || ''} onChange={(e) => onChange('displayName', e.target.value)} />
-        </div>
-
-        <div style={{ marginTop: '14px' }}>
-          <label className="input-label">Phone</label>
-          <input className="input-field" value={profile.phone || ''} onChange={(e) => onChange('phone', e.target.value)} />
-        </div>
-
-        <div style={{ marginTop: '14px' }}>
-          <label className="input-label">Address</label>
-          <input className="input-field" value={profile.address || ''} onChange={(e) => onChange('address', e.target.value)} />
-        </div>
-
-        <div style={{ marginTop: '14px' }}>
-          <label className="input-label">Position/Title</label>
-          <input className="input-field" value={profile.position || ''} onChange={(e) => onChange('position', e.target.value)} />
-        </div>
-
-        <div style={{ marginTop: '14px' }}>
-          <label className="input-label">Emergency Contact</label>
-          <input className="input-field" value={profile.emergencyContact || ''} onChange={(e) => onChange('emergencyContact', e.target.value)} />
-        </div>
-
-        <div style={{ marginTop: '14px' }}>
-          <label className="input-label">Bio</label>
-          <textarea
-            className="input-field"
-            rows={4}
-            value={profile.bio || ''}
-            onChange={(e) => onChange('bio', e.target.value)}
-            style={{ resize: 'vertical', paddingTop: '10px' }}
-          />
-        </div>
-
-        {saveError && <p className="water-level-meta" style={{ color: '#de8a7f', marginTop: '12px' }}>{saveError}</p>}
-        {saveMessage && <p className="water-level-meta" style={{ color: '#6eb5b7', marginTop: '12px' }}>{saveMessage}</p>}
-
-        <button className="btn-secondary" style={{ marginTop: '16px' }} onClick={onSave} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Profile'}
+        <button className="btn-secondary profile-save-btn" onClick={onSave} disabled={isSaving}>
+          {isSaving ? 'Saving…' : 'Save Changes'}
         </button>
       </article>
     </section>
@@ -80,3 +134,4 @@ const ProfileSection = ({
 };
 
 export default ProfileSection;
+

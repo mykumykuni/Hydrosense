@@ -202,6 +202,8 @@ const Dashboard = () => {
   const profileSection = (
     <ProfileSection
       profile={profileDraft}
+      authUser={authUser}
+      isAdmin={isAdmin}
       onChange={(field, value) => setProfileDraft((prev) => ({ ...prev, [field]: value }))}
       onPhotoChange={(e) => {
         const file = e.target.files?.[0];
@@ -228,6 +230,7 @@ const Dashboard = () => {
       onApprove={(userId) => mutateOperator('approve_operator', userId)}
       onDeactivate={(userId) => mutateOperator('deactivate_operator', userId)}
       onReactivate={(userId) => mutateOperator('reactivate_operator', userId)}
+      onRemove={(userId) => mutateOperator('remove_operator', userId)}
       onRefresh={refreshOperators}
       error={operatorError}
       loading={operatorsLoading}
