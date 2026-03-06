@@ -101,5 +101,5 @@ This always deploys from `frontend/` using `--cwd frontend`.
 Extra safeguards in this repo:
 
 - Node runtime pinned to `20.x` in both `package.json` files
-- Vercel build path uses explicit `vercel-build` scripts
+- Vercel build path uses explicit `vercel-build` scripts (`npm install` + build)
 - Frontend build command is `npm run vercel-build`

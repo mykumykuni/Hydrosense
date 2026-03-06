@@ -15,7 +15,7 @@
     "frontend:install": "cd frontend && npm install",
     "frontend:start": "cd frontend && npm start",
     "frontend:build": "cd frontend && npm run build",
-    "vercel-build": "npm ci --prefix frontend && npm run build --prefix frontend",
+    "vercel-build": "npm install --prefix frontend && npm run build --prefix frontend",
     "vercel:link": "vercel link --cwd frontend",
     "vercel:deploy": "vercel --cwd frontend --prod --yes",
     "deploy:frontend": "npm run vercel:deploy"
