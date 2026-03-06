@@ -9,6 +9,11 @@ const now = () => Date.now();
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 
+const getDeterministicAdminId = (email) => {
+  const stable = crypto.createHash('sha256').update(`admin:${email}`).digest('hex').slice(0, 24);
+  return `user-admin-${stable}`;
+};
+
 const hashPassword = (password, salt) => {
   return crypto.pbkdf2Sync(password, salt, 120000, 64, 'sha512').toString('hex');
 };
@@ -38,11 +43,13 @@ const signPayload = (encodedPayload) => {
   return crypto.createHmac('sha256', AUTH_TOKEN_SECRET).update(encodedPayload).digest('base64url');
 };
 
-const createSignedSessionToken = (userId) => {
+const createSignedSessionToken = (user) => {
   const issuedAt = now();
   const payload = {
     v: 1,
-    uid: userId,
+    uid: user.id,
+    email: user.email,
+    role: user.role,
     iat: issuedAt,
     exp: issuedAt + SESSION_TTL_MS
   };
@@ -75,7 +82,12 @@ const verifySignedSessionToken = (token) => {
     if (payload.exp <= now()) {
       return { ok: false, expired: true };
     }
-    return { ok: true, userId: String(payload.uid) };
+    return {
+      ok: true,
+      userId: String(payload.uid),
+      email: normalizeEmail(payload.email),
+      role: String(payload.role || '')
+    };
   } catch {
     return { ok: false };
   }
@@ -115,7 +127,7 @@ const ensureAdminSeed = (state) => {
   const timestamp = now();
 
   state.users.push({
-    id: `user-${crypto.randomUUID()}`,
+    id: getDeterministicAdminId(email),
     email,
     role: 'admin',
     status: 'active',
@@ -198,10 +210,10 @@ const registerOperator = (state, payload) => {
   return { ok: true, user: sanitizeUser(user) };
 };
 
-const createSession = (state, userId) => {
+const createSession = (state, user) => {
   ensureUserState(state);
   cleanupSessions(state);
-  return createSignedSessionToken(userId);
+  return createSignedSessionToken(user);
 };
 
 const loginUser = (state, payload) => {
@@ -231,7 +243,7 @@ const loginUser = (state, payload) => {
     return { ok: false, error: 'deactivated' };
   }
 
-  const token = createSession(state, user.id);
+  const token = createSession(state, user);
   user.lastLoginAt = now();
   user.updatedAt = now();
 
@@ -259,7 +271,18 @@ const getAuthenticatedUser = (state, req) => {
 
   const signed = verifySignedSessionToken(token);
   if (signed.ok) {
-    const user = state.users.find((item) => item.id === signed.userId);
+    let user = state.users.find((item) => item.id === signed.userId);
+
+    // On serverless cold starts without shared persistence, ensure deterministic seeded
+    // admin can still resolve from token claims across instances.
+    if (!user && signed.role === 'admin' && signed.email) {
+      const seededAdminEmail = normalizeEmail(ADMIN_SEED_EMAIL);
+      if (seededAdminEmail && signed.email === seededAdminEmail) {
+        ensureAdminSeed(state);
+        user = state.users.find((item) => item.email === signed.email && item.role === 'admin');
+      }
+    }
+
     if (!user || user.status === 'deactivated') {
       return { ok: false, error: 'invalid_user' };
     }
