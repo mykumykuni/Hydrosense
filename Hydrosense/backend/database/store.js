@@ -2,9 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const { createRealtimeState } = require('./stateFactory');
 
-const stateFilePath = path.join(process.cwd(), 'backend', 'database', 'state.json');
-const kvBaseUrl = process.env.KV_REST_API_URL || '';
-const kvToken = process.env.KV_REST_API_TOKEN || '';
+const stateFilePath = path.join(__dirname, 'state.json');
+const kvBaseUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
+const kvToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
 const kvStateKey = 'hydrosense:state:v1';
 let memoryState = null;
 
@@ -44,11 +44,14 @@ const readFromKv = async () => {
 const writeToKv = async (state) => {
   if (!hasKvConfig()) return false;
 
-  const data = await fetchJsonSafe(`${kvBaseUrl}/set/${encodeURIComponent(kvStateKey)}/${encodeURIComponent(JSON.stringify(state))}`, {
-    method: 'GET',
+  // Use POST body to avoid URL-length issues when state payload grows.
+  const data = await fetchJsonSafe(`${kvBaseUrl}/set/${encodeURIComponent(kvStateKey)}`, {
+    method: 'POST',
     headers: {
-      Authorization: `Bearer ${kvToken}`
-    }
+      Authorization: `Bearer ${kvToken}`,
+      'Content-Type': 'text/plain'
+    },
+    body: JSON.stringify(state)
   });
 
   return Boolean(data && data.result === 'OK');
