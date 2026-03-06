@@ -2,18 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "echo Install handled by build",
   "buildCommand": "npm run vercel-build",
-  "outputDirectory": "frontend/build",
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  "outputDirectory": "frontend/build"
 }
