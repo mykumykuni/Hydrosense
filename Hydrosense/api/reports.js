@@ -30,6 +30,8 @@ module.exports = async (req, res) => {
 
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
 
+  try {
+
   if (!['GET', 'POST'].includes(req.method)) {
     res.status(405).send(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
     return;
@@ -172,4 +174,8 @@ module.exports = async (req, res) => {
   }
 
   res.status(400).send(JSON.stringify({ ok: false, error: 'unknown_action' }));
+  } catch (err) {
+    console.error('[reports] unhandled error:', err);
+    res.status(500).send(JSON.stringify({ ok: false, error: 'server_error', detail: String(err?.message || err) }));
+  }
 };

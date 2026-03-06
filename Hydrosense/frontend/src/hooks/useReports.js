@@ -3,7 +3,7 @@ import { createApiClient } from '../utils/apiClient';
 
 export const useReports = ({ apiBase, authToken, isAdmin }) => {
   const [reports, setReports] = useState([]);
-  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsLoading, setReportsLoading] = useState(true);
   const [reportsError, setReportsError] = useState('');
   const [reportUnreadCount, setReportUnreadCount] = useState(0);
 

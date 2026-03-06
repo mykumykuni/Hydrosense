@@ -94,7 +94,8 @@ const Dashboard = () => {
     reportUnreadCount,
     submitReport,
     replyToReport,
-    updateReportStatus
+    updateReportStatus,
+    refreshReports
   } = useReports({ apiBase: API_BASE, authToken, isAdmin });
 
   useEffect(() => {
@@ -276,6 +277,7 @@ const Dashboard = () => {
                 submitReport={submitReport}
                 replyToReport={replyToReport}
                 updateReportStatus={updateReportStatus}
+                onRefresh={refreshReports}
               />
             )
             : (

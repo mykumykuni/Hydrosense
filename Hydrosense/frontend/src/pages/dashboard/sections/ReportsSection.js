@@ -134,7 +134,8 @@ const ReportsSection = ({
   reportsError,
   submitReport,
   replyToReport,
-  updateReportStatus
+  updateReportStatus,
+  onRefresh
 }) => {
   const [formType, setFormType] = useState('equipment');
   const [formPriority, setFormPriority] = useState('medium');
@@ -168,6 +169,7 @@ const ReportsSection = ({
       setFormSubject('');
       setFormType('equipment');
       setFormPriority('medium');
+      if (onRefresh) onRefresh();
     }
   };
 
@@ -182,6 +184,17 @@ const ReportsSection = ({
                 {reports.length} report{reports.length !== 1 ? 's' : ''}
               </p>
             </div>
+            {onRefresh && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={onRefresh}
+                disabled={reportsLoading}
+                style={{ height: '32px', padding: '0 12px', fontSize: '0.72rem' }}
+              >
+                {reportsLoading ? 'Loading…' : 'Refresh'}
+              </button>
+            )}
           </div>
 
           {reportsLoading && <p className="water-level-meta">Loading reports...</p>}
