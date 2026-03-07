@@ -40,56 +40,67 @@ const OperatorDetailModal = ({ operator, onClose }) => {
 
   return (
     <div className="alert-modal-backdrop" onClick={onClose}>
-      <div className="op-detail-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="sensor-detail-modal op-detail-modal" onClick={(e) => e.stopPropagation()}>
 
-        <div className="op-detail-topbar">
-          <span className="mini-label">Operator Profile</span>
-          <button className="btn-secondary modal-close-btn" type="button" onClick={onClose}>&#x2715;</button>
+        {/* Header — mirrors SensorDetailModal */}
+        <div className="sensor-modal-header">
+          <div>
+            <span className="mini-label">Operator Profile</span>
+            <h2 style={{ marginTop: '4px' }}>{displayName || 'Unnamed Operator'}</h2>
+          </div>
+          <button className="btn-secondary modal-close-btn" type="button" onClick={onClose}>✕</button>
         </div>
 
-        <div className="op-detail-hero">
-          <div className="op-detail-avatar">
-            {photoDataUrl ? (
-              <img className="op-detail-avatar-img" src={photoDataUrl} alt="profile" />
-            ) : (
-              <span className="op-detail-avatar-initials">
-                {getInitials(displayName, email)}
+        <div className="sensor-modal-body">
+
+          {/* Hero: avatar + identity */}
+          <div className="sensor-modal-section op-detail-hero">
+            <div className="op-detail-avatar">
+              {photoDataUrl ? (
+                <img className="op-detail-avatar-img" src={photoDataUrl} alt="profile" />
+              ) : (
+                <span className="op-detail-avatar-initials">
+                  {getInitials(displayName, email)}
+                </span>
+              )}
+            </div>
+            <div className="op-detail-identity">
+              <p className="op-detail-email">{email}</p>
+              {position && <p className="op-detail-position">{position}</p>}
+              <span
+                className="sensor-badge"
+                style={{ backgroundColor: statusTone[status] || 'rgba(110,181,183,0.25)', color: '#0e1a1c', marginTop: '10px', display: 'inline-block' }}
+              >
+                {status}
               </span>
-            )}
-          </div>
-          <div className="op-detail-identity">
-            <h2 className="op-detail-name">{displayName || 'Unnamed Operator'}</h2>
-            <p className="op-detail-email">{email}</p>
-            {position && <p className="op-detail-position">{position}</p>}
-            <span
-              className="sensor-badge"
-              style={{ backgroundColor: statusTone[status] || 'rgba(110,181,183,0.25)', color: '#0e1a1c', marginTop: '10px', display: 'inline-block' }}
-            >
-              {status}
-            </span>
-          </div>
-        </div>
-
-        <div className="op-detail-grid">
-          <DetailField label="Phone" value={phone} />
-          <DetailField label="Emergency Contact" value={emergencyContact} />
-          <DetailField label="Joined" value={formatDate(createdAt)} />
-          {approvedAt && <DetailField label="Approved" value={formatDate(approvedAt)} />}
-          {lastLoginAt && <DetailField label="Last Login" value={formatDate(lastLoginAt)} />}
-          {address && (
-            <div className="op-detail-field op-detail-field-wide">
-              <span className="mini-label">Address</span>
-              <p className="op-detail-value">{address}</p>
             </div>
-          )}
-          {bio && (
-            <div className="op-detail-field op-detail-field-wide">
-              <span className="mini-label">Bio</span>
-              <p className="op-detail-value op-detail-bio">{bio}</p>
-            </div>
-          )}
-        </div>
+          </div>
 
+          {/* Details grid */}
+          <div className="sensor-modal-section">
+            <span className="mini-label">Details</span>
+            <div className="op-detail-grid" style={{ marginTop: '12px' }}>
+              <DetailField label="Phone" value={phone} />
+              <DetailField label="Emergency Contact" value={emergencyContact} />
+              <DetailField label="Joined" value={formatDate(createdAt)} />
+              {approvedAt && <DetailField label="Approved" value={formatDate(approvedAt)} />}
+              {lastLoginAt && <DetailField label="Last Login" value={formatDate(lastLoginAt)} />}
+              {address && (
+                <div className="op-detail-field op-detail-field-wide">
+                  <span className="mini-label">Address</span>
+                  <p className="op-detail-value">{address}</p>
+                </div>
+              )}
+              {bio && (
+                <div className="op-detail-field op-detail-field-wide">
+                  <span className="mini-label">Bio</span>
+                  <p className="op-detail-value op-detail-bio">{bio}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

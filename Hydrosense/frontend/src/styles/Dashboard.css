@@ -1394,31 +1394,12 @@
 
 .op-detail-modal {
   width: min(100%, 560px);
-  max-height: min(90vh, 720px);
-  overflow-y: auto;
-  border-radius: var(--shape-panel);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg), var(--glass-bg-soft);
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-  padding: 22px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(110, 181, 183, 0.4) transparent;
-}
-
-.op-detail-topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
 }
 
 .op-detail-hero {
   display: flex;
   gap: 20px;
   align-items: flex-start;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(242, 228, 208, 0.12);
 }
 
 .op-detail-avatar {

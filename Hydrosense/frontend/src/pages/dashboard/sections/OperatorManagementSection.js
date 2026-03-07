@@ -105,6 +105,9 @@ const OperatorManagementSection = ({
                   </span>
                 </div>
                 <div className="operator-card-actions" onClick={(e) => e.stopPropagation()}>
+                  <button className="btn-secondary" onClick={() => setSelectedOperator(operator)}>
+                    View Profile
+                  </button>
                   {operator.status === 'pending' && (
                     <>
                       <button className="btn-secondary" onClick={() => onApprove(operator.id)}>
