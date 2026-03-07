@@ -107,13 +107,12 @@ Main orchestrator: `src/pages/Dashboard.js`
 Deploy from repository root so frontend + root API are included:
 
 ```bash
-cd C:\Windows\System32\Hydrosense
+cd C:\Users\Myku\Capstone\Hydrosense
 npm run vercel:deploy
 ```
 
 ## Production Domains
 
-- `https://hydrosense.app`
-- `https://www.hydrosense.app`
-
-Custom `*.vercel.app` aliases are restricted to namespaces owned by your Vercel account.
+- Production: `https://hydrosense-omega.vercel.app`
+- Branch (main): `https://frontend-git-main-mykumykunis-projects.vercel.app`
+- Preview: `https://frontend-ni7vbh6py-mykumykunis-projects.vercel.app`

@@ -14,8 +14,8 @@ This guide reflects the current architecture:
 
 ## Repository Layout
 
-- Workspace root: `C:\Windows\System32\Hydrosense`
-- App root: `C:\Windows\System32\Hydrosense\Hydrosense`
+- Workspace root: `C:\Users\Myku\Capstone\Hydrosense`
+- App root: `C:\Users\Myku\Capstone\Hydrosense\Hydrosense`
 - Frontend source: `Hydrosense/frontend`
 - API handlers: `Hydrosense/api`
 - API entrypoints for Vercel: `api`
@@ -25,7 +25,7 @@ This guide reflects the current architecture:
 Run from app root:
 
 ```bash
-cd C:\Windows\System32\Hydrosense\Hydrosense
+cd C:\Users\Myku\Capstone\Hydrosense\Hydrosense
 npm install
 npm run dev
 ```
@@ -42,7 +42,7 @@ Notes:
 Build from workspace root (same flow used by Vercel root deployment):
 
 ```bash
-cd C:\Windows\System32\Hydrosense
+cd C:\Users\Myku\Capstone\Hydrosense
 npm run vercel-build
 ```
 
@@ -51,7 +51,7 @@ npm run vercel-build
 Always deploy from workspace root:
 
 ```bash
-cd C:\Windows\System32\Hydrosense
+cd C:\Users\Myku\Capstone\Hydrosense
 npm run vercel:link
 npm run vercel:deploy
 ```
@@ -105,5 +105,5 @@ Confirm `/api/auth` exists in deployed project and deployment includes root `api
 
 ### `npm audit fix` says lockfile missing
 Run `npm audit fix` inside a folder that has a lockfile:
-- `C:\Windows\System32\Hydrosense\Hydrosense`
-- or `C:\Windows\System32\Hydrosense\Hydrosense\frontend`
+- `C:\Users\Myku\Capstone\Hydrosense\Hydrosense`
+- or `C:\Users\Myku\Capstone\Hydrosense\Hydrosense\frontend`

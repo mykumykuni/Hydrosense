@@ -73,7 +73,7 @@ npm run vercel-build
 Always deploy from repository root so both frontend output and API functions are included:
 
 ```bash
-cd C:\Windows\System32\Hydrosense
+cd C:\Users\Myku\Capstone\Hydrosense
 npm run vercel:link
 npm run vercel:deploy
 ```

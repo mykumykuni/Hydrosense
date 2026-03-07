@@ -28,24 +28,18 @@ Build from workspace root (same command Vercel uses):
 npm run vercel-build
 ```
 
-## Current Live URL
+## Current Live URLs
 
-- Primary domain: `https://hydrosense.app`
-- Secondary domain: `https://www.hydrosense.app`
-
-## Notes About `*.vercel.app` Names
-
-Requested vanity subdomains like `www.hydrosenseapp.vercel.app` can only be used if that namespace belongs to your Vercel account.
-Your current account can use:
-- `*.vercel.app`
-- `*.mykumykunis-projects.vercel.app`
+- Production: `https://hydrosense-omega.vercel.app`
+- Branch (main): `https://frontend-git-main-mykumykunis-projects.vercel.app`
+- Preview: `https://frontend-ni7vbh6py-mykumykunis-projects.vercel.app`
 
 ## Deployment
 
 Deploy from repository root so frontend + API ship together:
 
 ```bash
-cd C:\Windows\System32\Hydrosense
+cd C:\Users\Myku\Capstone\Hydrosense
 npm run vercel:link
 npm run vercel:deploy
 ```
