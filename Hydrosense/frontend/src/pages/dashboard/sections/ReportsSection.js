@@ -127,6 +127,33 @@ const ReportCard = ({ report, isAdmin, onReply, onStatusChange }) => {
   );
 };
 
+const exportReportsCSV = (reports) => {
+  const rows = [
+    ['id', 'type', 'subject', 'priority', 'status', 'submittedBy', 'message', 'createdAt', 'replies'],
+    ...reports.map((r) => [
+      r.id,
+      r.type,
+      r.subject,
+      r.priority,
+      r.status,
+      r.submittedByEmail || '',
+      r.message,
+      new Date(r.createdAt).toISOString(),
+      (r.replies || []).map((rep) => `${rep.authorEmail}: ${rep.message}`).join(' | ')
+    ])
+  ];
+  const csv = rows.map((row) => row.map((f) => `"${String(f).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `hydrosense-reports-${Date.now()}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 const ReportsSection = ({
   isAdmin,
   reports,
@@ -193,6 +220,16 @@ const ReportsSection = ({
                 style={{ height: '32px', padding: '0 12px', fontSize: '0.72rem' }}
               >
                 {reportsLoading ? 'Loading…' : 'Refresh'}
+              </button>
+            )}
+            {reports.length > 0 && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => exportReportsCSV(reports)}
+                style={{ height: '32px', padding: '0 12px', fontSize: '0.72rem' }}
+              >
+                Export CSV
               </button>
             )}
           </div>

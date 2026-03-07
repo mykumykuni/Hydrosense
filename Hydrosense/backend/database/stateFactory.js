@@ -45,6 +45,9 @@ const createRealtimeState = () => {
     users: [],
     sessions: {},
     reports: [],
+    announcement: { message: '', setAt: null, setByEmail: '' },
+    auditLog: [],
+    shiftLogs: [],
     updatedAt: Date.now()
   };
 };

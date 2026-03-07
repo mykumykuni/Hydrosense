@@ -14,7 +14,20 @@ const normalizeThreshold = (state, key) => {
 
 const requireAdmin = (role) => role === 'admin';
 
-const applyAction = (state, action, payload, role) => {
+const pushAudit = (state, actorEmail, action, detail) => {
+  const now = Date.now();
+  if (!Array.isArray(state.auditLog)) state.auditLog = [];
+  state.auditLog.unshift({
+    id: `aud-${now}-${Math.random().toString(36).slice(2, 6)}`,
+    action,
+    actorEmail: actorEmail || 'unknown',
+    detail,
+    ts: now
+  });
+  if (state.auditLog.length > 200) state.auditLog = state.auditLog.slice(0, 200);
+};
+
+const applyAction = (state, action, payload, role, actorEmail) => {
   const nextPayload = payload && typeof payload === 'object' ? payload : {};
 
   switch (action) {
@@ -33,6 +46,7 @@ const applyAction = (state, action, payload, role) => {
     case 'clear_all_alerts': {
       if (!requireAdmin(role)) break;
       state.alertLog = [];
+      pushAudit(state, actorEmail, 'clear_all_alerts', 'Cleared all alerts');
       break;
     }
 
@@ -41,6 +55,7 @@ const applyAction = (state, action, payload, role) => {
       const id = String(nextPayload.id || '');
       if (!id) break;
       state.alertLog = state.alertLog.map((item) => (item.id === id ? { ...item, read: true, resolved: true } : item));
+      pushAudit(state, actorEmail, 'resolve_alert', `Resolved alert ${id}`);
       break;
     }
 
@@ -57,6 +72,7 @@ const applyAction = (state, action, payload, role) => {
         resolved: false,
         ts: now
       });
+      pushAudit(state, actorEmail, 'create_manual_alert', 'Created manual checkpoint alert');
       break;
     }
 
@@ -68,6 +84,23 @@ const applyAction = (state, action, payload, role) => {
         title: 'Operator Issue Reported',
         message: 'Operator requested admin review on live conditions.',
         source: 'operator-report',
+        read: false,
+        resolved: false,
+        ts: now
+      });
+      break;
+    }
+
+    case 'report_sensor_issue': {
+      const sensorKey = String(nextPayload.sensorKey || '');
+      const sensorLabel = String(nextPayload.sensorLabel || sensorKey);
+      const now = Date.now();
+      state.alertLog.unshift({
+        id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
+        severity: 'warning',
+        title: `Sensor Issue: ${sensorLabel}`,
+        message: `${actorEmail || 'Operator'} reported an issue with the ${sensorLabel} sensor.`,
+        source: `${sensorKey}-operator-report`,
         read: false,
         resolved: false,
         ts: now
@@ -90,6 +123,7 @@ const applyAction = (state, action, payload, role) => {
       if (field === 'min' && updated.min >= updated.max) updated.min = +(updated.max - 0.01).toFixed(3);
       if (field === 'max' && updated.max <= updated.min) updated.max = +(updated.min + 0.01).toFixed(3);
       state.thresholds[key] = updated;
+      pushAudit(state, actorEmail, 'update_threshold', `Updated ${key} ${field} threshold to ${value}`);
       break;
     }
 
@@ -97,11 +131,46 @@ const applyAction = (state, action, payload, role) => {
       if (!requireAdmin(role)) break;
       const value = Number(nextPayload.value);
       if (Number.isNaN(value)) break;
+      const prev = state.historyWindow;
       state.historyWindow = clamp(Math.round(value), MIN_HISTORY_POINTS, MAX_HISTORY_POINTS);
       Object.keys(state.history).forEach((key) => {
         const entries = Array.isArray(state.history[key]) ? state.history[key] : [];
         state.history[key] = entries.slice(-state.historyWindow);
       });
+      pushAudit(state, actorEmail, 'set_history_window', `Changed history window from ${prev} to ${state.historyWindow} points`);
+      break;
+    }
+
+    case 'set_announcement': {
+      if (!requireAdmin(role)) break;
+      const message = String(nextPayload.message || '').trim().slice(0, 500);
+      if (!message) break;
+      if (!state.announcement) state.announcement = {};
+      state.announcement = { message, setAt: Date.now(), setByEmail: actorEmail || 'admin' };
+      pushAudit(state, actorEmail, 'set_announcement', `Set announcement: "${message.slice(0, 60)}${message.length > 60 ? '...' : ''}"`);
+      break;
+    }
+
+    case 'clear_announcement': {
+      if (!requireAdmin(role)) break;
+      state.announcement = { message: '', setAt: null, setByEmail: '' };
+      pushAudit(state, actorEmail, 'clear_announcement', 'Cleared announcement banner');
+      break;
+    }
+
+    case 'submit_shift_log': {
+      const note = String(nextPayload.note || '').trim().slice(0, 1000);
+      if (!note) break;
+      const now = Date.now();
+      if (!Array.isArray(state.shiftLogs)) state.shiftLogs = [];
+      state.shiftLogs.unshift({
+        id: `sl-${now}-${Math.random().toString(36).slice(2, 8)}`,
+        operatorEmail: actorEmail || 'unknown',
+        operatorName: String(nextPayload.operatorName || ''),
+        note,
+        ts: now
+      });
+      if (state.shiftLogs.length > 100) state.shiftLogs = state.shiftLogs.slice(0, 100);
       break;
     }
 
@@ -117,5 +186,6 @@ const applyAction = (state, action, payload, role) => {
 };
 
 module.exports = {
-  applyAction
+  applyAction,
+  pushAudit
 };

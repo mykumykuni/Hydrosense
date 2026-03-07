@@ -1,5 +1,6 @@
 const { getState, saveState } = require('../backend/database/store');
 const { ensureAdminSeed, sanitizeUser, getAuthenticatedUser } = require('../backend/database/auth');
+const { pushAudit } = require('../backend/database/actions');
 
 const parseBody = (req) => {
   if (!req.body) return {};
@@ -80,10 +81,12 @@ module.exports = async (req, res) => {
     target.approvedAt = Date.now();
     target.deactivatedAt = null;
     target.updatedAt = Date.now();
+    pushAudit(state, auth.user.email, 'approve_operator', `Approved operator ${target.email}`);
   } else if (action === 'deactivate_operator') {
     target.status = 'deactivated';
     target.deactivatedAt = Date.now();
     target.updatedAt = Date.now();
+    pushAudit(state, auth.user.email, 'deactivate_operator', `Deactivated operator ${target.email}`);
 
     // Invalidate existing sessions for this operator.
     Object.keys(state.sessions || {}).forEach((token) => {
@@ -97,11 +100,13 @@ module.exports = async (req, res) => {
     target.deactivatedAt = null;
     if (!target.approvedAt) target.approvedAt = Date.now();
     target.updatedAt = Date.now();
+    pushAudit(state, auth.user.email, 'reactivate_operator', `Reactivated operator ${target.email}`);
   } else if (action === 'remove_operator') {
     if (target.status === 'active') {
       res.status(400).send(JSON.stringify({ ok: false, error: 'deactivate_before_removing' }));
       return;
     }
+    pushAudit(state, auth.user.email, 'remove_operator', `Permanently removed operator ${target.email}`);
     // Remove the user and their sessions permanently.
     const idx = state.users.findIndex((u) => u.id === targetId);
     if (idx !== -1) state.users.splice(idx, 1);

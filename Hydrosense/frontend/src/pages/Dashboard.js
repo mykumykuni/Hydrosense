@@ -10,10 +10,12 @@ import AlertModal from './dashboard/AlertModal';
 import ProfileSection from './dashboard/sections/ProfileSection';
 import OperatorManagementSection from './dashboard/sections/OperatorManagementSection';
 import ReportsSection from './dashboard/sections/ReportsSection';
+import AuditLogSection from './dashboard/sections/AuditLogSection';
 import DashboardSidebar from './dashboard/DashboardSidebar';
 import DashboardTopbar from './dashboard/DashboardTopbar';
 import DashboardMobileTabs from './dashboard/DashboardMobileTabs';
 import SensorDetailModal from './dashboard/SensorDetailModal';
+import AnnouncementBanner from './dashboard/AnnouncementBanner';
 import { clearAuthSession, getAuthToken, getAuthUser } from '../utils/authStorage';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useProfileAndOperators } from '../hooks/useProfileAndOperators';
@@ -29,6 +31,7 @@ const Dashboard = () => {
   const [focusSensorKey, setFocusSensorKey] = useState('');
   const [selectedSensorKey, setSelectedSensorKey] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sessionStart] = useState(() => Date.now());
 
   const authToken = getAuthToken();
   const initialAuthUser = getAuthUser();
@@ -46,6 +49,9 @@ const Dashboard = () => {
     history,
     historyWindow,
     alertLog,
+    announcement,
+    auditLog,
+    shiftLogs,
     syncState,
     getRange,
     getSensorState,
@@ -58,7 +64,11 @@ const Dashboard = () => {
     resolveAlert,
     createManualAlert,
     updateThreshold,
-    updateHistoryWindow
+    updateHistoryWindow,
+    reportSensorIssue,
+    setAnnouncementMsg,
+    clearAnnouncementMsg,
+    submitShiftLog
   } = useDashboardData({
     apiBase: API_BASE,
     authToken,
@@ -185,9 +195,11 @@ const Dashboard = () => {
 
   const visibleAlerts = alertLog;
   const unreadCount = visibleAlerts.filter((a) => !a.read).length;
-  const filteredAlerts = alertFilter === 'all'
-    ? visibleAlerts
-    : visibleAlerts.filter((a) => a.severity === alertFilter);
+  const filteredAlerts = alertFilter === 'session'
+    ? visibleAlerts.filter((a) => a.ts >= sessionStart)
+    : alertFilter === 'all'
+      ? visibleAlerts
+      : visibleAlerts.filter((a) => a.severity === alertFilter);
 
   const themeClass = 'theme-dark';
   const roleClass = isAdmin ? 'role-admin' : 'role-operator';
@@ -202,12 +214,18 @@ const Dashboard = () => {
         historyWindow={historyWindow}
         updateHistoryWindow={updateHistoryWindow}
         formatAlertTime={formatAlertTime}
+        announcement={announcement}
+        onSetAnnouncement={setAnnouncementMsg}
+        onClearAnnouncement={clearAnnouncementMsg}
       />
     )
     : (
       <OperationsSectionOperator
         sensors={sensors}
         onNavigateReports={() => navigate('/dashboard/reports')}
+        shiftLogs={shiftLogs}
+        onSubmitShiftLog={submitShiftLog}
+        operatorName={authUser?.profile?.displayName || ''}
       />
     );
 
@@ -255,7 +273,9 @@ const Dashboard = () => {
       ? profileSection
       : currentPage === 'operators'
         ? operatorsSection
-        : currentPage === 'alerts'
+        : currentPage === 'audit-log'
+          ? <AuditLogSection auditLog={auditLog} shiftLogs={shiftLogs} />
+          : currentPage === 'alerts'
           ? (
             <AlertsPageSection
               filteredAlerts={filteredAlerts}
@@ -265,6 +285,9 @@ const Dashboard = () => {
               formatAlertTime={formatAlertTime}
               toggleRead={toggleRead}
               openRelatedSensor={openRelatedSensor}
+              sessionStart={sessionStart}
+              isAdmin={isAdmin}
+              resolveAlert={resolveAlert}
             />
           )
           : currentPage === 'reports'
@@ -288,6 +311,10 @@ const Dashboard = () => {
                   healthPercent={healthPercent}
                   healthySensorCount={healthySensorCount}
                   sensorCount={sensorKeys.length}
+                  isAdmin={isAdmin}
+                  totalOperators={operators.length}
+                  pendingOperators={pendingCount}
+                  openReportsCount={reports.filter((r) => r.status === 'open').length}
                 />
                 <SensorsSection
                   prioritySensors={prioritySensors}
@@ -303,6 +330,10 @@ const Dashboard = () => {
                   sensorRefs={sensorRefs}
                   isAdmin={isAdmin}
                   onSensorClick={setSelectedSensorKey}
+                  onReportSensorIssue={(key, label) => {
+                    reportSensorIssue(key, label);
+                    navigate('/dashboard/alerts');
+                  }}
                 />
               </>
             );
@@ -327,6 +358,9 @@ const Dashboard = () => {
           syncState={syncState}
           historyWindow={historyWindow}
           unreadCount={unreadCount}
+          pendingCount={pendingCount}
+          reportUnreadCount={reportUnreadCount}
+          recentUnreadAlerts={visibleAlerts.filter((a) => !a.read).slice(0, 3)}
           setAlertModalOpen={setAlertModalOpen}
           exportAlertHistory={exportAlertHistory}
           onLogout={() => {
@@ -334,6 +368,7 @@ const Dashboard = () => {
             navigate('/login');
           }}
           onMenuToggle={() => setSidebarOpen((prev) => !prev)}
+          onNavigate={navigate}
         />
 
         <DashboardMobileTabs
@@ -343,6 +378,14 @@ const Dashboard = () => {
           pendingCount={pendingCount}
           reportUnreadCount={reportUnreadCount}
         />
+
+        {announcement?.message && (
+          <AnnouncementBanner
+            announcement={announcement}
+            isAdmin={isAdmin}
+            onClear={clearAnnouncementMsg}
+          />
+        )}
 
         <div className="dashboard-page-content">{pageContent}</div>
 

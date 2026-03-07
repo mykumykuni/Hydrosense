@@ -14,6 +14,9 @@ export const useDashboardData = ({ apiBase, authToken, isAdmin }) => {
   const [history, setHistory] = useState(createInitialHistory);
   const [historyWindow, setHistoryWindow] = useState(DEFAULT_HISTORY_POINTS);
   const [alertLog, setAlertLog] = useState([]);
+  const [announcement, setAnnouncementState] = useState({ message: '', setAt: null, setByEmail: '' });
+  const [auditLog, setAuditLog] = useState([]);
+  const [shiftLogs, setShiftLogs] = useState([]);
   const [syncState, setSyncState] = useState('connecting');
 
   const pollTimerRef = useRef(null);
@@ -27,6 +30,9 @@ export const useDashboardData = ({ apiBase, authToken, isAdmin }) => {
     if (payload.history) setHistory(payload.history);
     if (typeof payload.historyWindow === 'number') setHistoryWindow(payload.historyWindow);
     if (Array.isArray(payload.alertLog)) setAlertLog(payload.alertLog);
+    if (payload.announcement) setAnnouncementState(payload.announcement);
+    if (Array.isArray(payload.auditLog)) setAuditLog(payload.auditLog);
+    if (Array.isArray(payload.shiftLogs)) setShiftLogs(payload.shiftLogs);
     setSyncState(payload.syncMode || 'vercel-api-live');
   }, []);
 
@@ -115,6 +121,9 @@ export const useDashboardData = ({ apiBase, authToken, isAdmin }) => {
     callAction('create_manual_alert');
   }, [callAction, isAdmin]);
   const reportOperatorIssue = useCallback(() => callAction('report_operator_issue'), [callAction]);
+  const reportSensorIssue = useCallback((sensorKey, sensorLabel) => {
+    callAction('report_sensor_issue', { sensorKey, sensorLabel });
+  }, [callAction]);
   const updateThreshold = useCallback((key, field, nextValue) => {
     if (!isAdmin || Number.isNaN(nextValue)) return;
     callAction('update_threshold', { key, field, value: nextValue });
@@ -123,6 +132,17 @@ export const useDashboardData = ({ apiBase, authToken, isAdmin }) => {
     if (!isAdmin || Number.isNaN(nextValue)) return;
     callAction('set_history_window', { value: nextValue });
   }, [callAction, isAdmin]);
+  const setAnnouncement = useCallback((message) => {
+    if (!isAdmin) return;
+    callAction('set_announcement', { message });
+  }, [callAction, isAdmin]);
+  const clearAnnouncementAction = useCallback(() => {
+    if (!isAdmin) return;
+    callAction('clear_announcement');
+  }, [callAction, isAdmin]);
+  const submitShiftLog = useCallback((note, operatorName) => {
+    callAction('submit_shift_log', { note, operatorName });
+  }, [callAction]);
 
   return {
     limits,
@@ -131,6 +151,9 @@ export const useDashboardData = ({ apiBase, authToken, isAdmin }) => {
     history,
     historyWindow,
     alertLog,
+    announcement,
+    auditLog,
+    shiftLogs,
     syncState,
     getRange,
     getSensorState,
@@ -143,8 +166,12 @@ export const useDashboardData = ({ apiBase, authToken, isAdmin }) => {
     resolveAlert,
     createManualAlert,
     reportOperatorIssue,
+    reportSensorIssue,
     updateThreshold,
     updateHistoryWindow,
+    setAnnouncementMsg: setAnnouncement,
+    clearAnnouncementMsg: clearAnnouncementAction,
+    submitShiftLog,
     callAction
   };
 };

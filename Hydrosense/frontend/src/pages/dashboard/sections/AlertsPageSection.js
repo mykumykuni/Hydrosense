@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AlertsPageSection = ({ filteredAlerts, alertFilter, setAlertFilter, extractSensorKey, formatAlertTime, toggleRead, openRelatedSensor }) => {
+const AlertsPageSection = ({ filteredAlerts, alertFilter, setAlertFilter, extractSensorKey, formatAlertTime, toggleRead, openRelatedSensor, sessionStart, isAdmin, resolveAlert }) => {
   return (
     <section className="page-fill-section">
       <article className="analysis-card utility-card">
@@ -20,6 +20,15 @@ const AlertsPageSection = ({ filteredAlerts, alertFilter, setAlertFilter, extrac
                 {f}
               </button>
             ))}
+            {!isAdmin && (
+              <button
+                type="button"
+                className={`filter-chip ${alertFilter === 'session' ? 'active' : ''}`}
+                onClick={() => setAlertFilter((prev) => prev === 'session' ? 'all' : 'session')}
+              >
+                My Session
+              </button>
+            )}
           </div>
         </div>
 
@@ -44,6 +53,11 @@ const AlertsPageSection = ({ filteredAlerts, alertFilter, setAlertFilter, extrac
                     {sensorKey && (
                       <button className="btn-secondary" type="button" onClick={() => openRelatedSensor(sensorKey)}>
                         Open Sensor
+                      </button>
+                    )}
+                    {isAdmin && !item.resolved && resolveAlert && (
+                      <button className="btn-secondary" type="button" onClick={() => resolveAlert(item.id)}>
+                        Resolve
                       </button>
                     )}
                   </div>

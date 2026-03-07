@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import WaterLevelSection from './WaterLevelSection';
 
 const OperationsSectionAdmin = ({
@@ -8,8 +8,22 @@ const OperationsSectionAdmin = ({
   alertLog,
   historyWindow,
   updateHistoryWindow,
-  formatAlertTime
+  formatAlertTime,
+  announcement,
+  onSetAnnouncement,
+  onClearAnnouncement
 }) => {
+  const [announceDraft, setAnnounceDraft] = useState('');
+  const [announceMsg, setAnnounceMsg] = useState('');
+
+  const handlePost = () => {
+    if (!announceDraft.trim()) return;
+    onSetAnnouncement(announceDraft.trim());
+    setAnnounceMsg('Announcement posted.');
+    setAnnounceDraft('');
+    setTimeout(() => setAnnounceMsg(''), 3000);
+  };
+
   return (
     <section className="operations-grid">
       <article className="analysis-card utility-card">
@@ -80,6 +94,36 @@ const OperationsSectionAdmin = ({
             </div>
           ))
         )}
+      </article>
+
+      <article className="analysis-card utility-card announcement-card">
+        <h3 className="mini-label">Broadcast Announcement</h3>
+        {announcement?.message ? (
+          <div className="current-announcement">
+            <p className="announcement-preview">Current: &ldquo;{announcement.message}&rdquo;</p>
+            <button className="btn-danger" type="button" onClick={onClearAnnouncement} style={{ marginTop: '10px' }}>
+              Clear Announcement
+            </button>
+          </div>
+        ) : (
+          <p className="water-level-meta" style={{ marginBottom: '10px' }}>No active announcement.</p>
+        )}
+        <div className="announce-compose">
+          <textarea
+            className="reply-textarea"
+            placeholder="Write a message for all operators..."
+            value={announceDraft}
+            onChange={(e) => setAnnounceDraft(e.target.value)}
+            rows={3}
+            maxLength={500}
+          />
+          <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
+            <button className="btn-solid" type="button" onClick={handlePost} disabled={!announceDraft.trim()}>
+              Post Announcement
+            </button>
+            {announceMsg && <span className="profile-msg profile-msg-success" style={{ margin: 0 }}>{announceMsg}</span>}
+          </div>
+        </div>
       </article>
     </section>
   );

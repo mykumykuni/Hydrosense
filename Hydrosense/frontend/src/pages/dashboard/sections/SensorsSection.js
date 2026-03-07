@@ -22,7 +22,8 @@ const SensorsSection = ({
   focusSensorKey,
   sensorRefs,
   isAdmin,
-  onSensorClick
+  onSensorClick,
+  onReportSensorIssue
 }) => {
   return (
     <section className="sensor-layout">
@@ -60,6 +61,15 @@ const SensorsSection = ({
                 <span>Max {range.max}</span>
                 <span>Now {value}</span>
               </div>
+              {!isAdmin && (
+                <button
+                  type="button"
+                  className="btn-secondary sensor-report-btn"
+                  onClick={(e) => { e.stopPropagation(); onReportSensorIssue(key, limits[key].label); }}
+                >
+                  Report Issue
+                </button>
+              )}
             </article>
           );
         })}

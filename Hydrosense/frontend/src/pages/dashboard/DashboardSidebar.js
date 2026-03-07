@@ -36,6 +36,11 @@ const DashboardSidebar = ({ currentPage, isAdmin, navigate, pendingCount, report
               {pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}
             </div>
           )}
+          {isAdmin && (
+            <div className={`workspace-nav-item ${currentPage === 'audit-log' ? 'active' : ''}`} onClick={() => go('/dashboard/audit-log')}>
+              Audit Log
+            </div>
+          )}
         </nav>
       </aside>
     </>
