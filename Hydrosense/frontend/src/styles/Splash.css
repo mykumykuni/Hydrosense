@@ -1,0 +1,95 @@
+/* =========================================================
+   SPLASH SCREEN — Ripple + Glass Panel Reveal
+   ========================================================= */
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(110, 181, 183, 0.22) 0%, transparent 58%),
+    radial-gradient(circle at 14% 14%, rgba(110, 181, 183, 0.12), transparent 34%),
+    linear-gradient(135deg, #16171d 0%, #1f2a2e 52%, #233538 100%);
+  transition: opacity 0.7s ease;
+}
+
+.splash-screen.splash-exit {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Ripple rings ─────────────────────────────────────── */
+
+.splash-ripples {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.splash-ripple {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(110, 181, 183, 0.55);
+  animation: splashRipple 2.4s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+}
+
+.splash-ripple.r1 { animation-delay: 0s; }
+.splash-ripple.r2 { animation-delay: 0.5s; }
+.splash-ripple.r3 { animation-delay: 1.0s; }
+.splash-ripple.r4 { animation-delay: 1.5s; }
+
+@keyframes splashRipple {
+  0%   { transform: scale(0.5); opacity: 0.85; }
+  100% { transform: scale(6);   opacity: 0;    }
+}
+
+/* ── Glass panel ──────────────────────────────────────── */
+
+.splash-panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 44px 52px;
+  border-radius: 28px;
+  border: 1px solid rgba(242, 228, 208, 0.22);
+  background: linear-gradient(145deg, rgba(42, 43, 51, 0.72), rgba(24, 24, 29, 0.78));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    0 28px 60px rgba(7, 8, 10, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  animation: splashPanelReveal 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes splashPanelReveal {
+  from { opacity: 0; transform: translateY(36px) scale(0.93); }
+  to   { opacity: 1; transform: translateY(0) scale(1);       }
+}
+
+.splash-logo {
+  width: min(220px, 55vw);
+  height: auto;
+  filter: drop-shadow(0 14px 34px rgba(7, 23, 30, 0.55));
+}
+
+.splash-tagline {
+  margin: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(110, 181, 183, 0.8);
+  font-weight: 600;
+  text-align: center;
+}

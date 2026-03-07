@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './styles/Global.css';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
+import SplashScreen from './pages/SplashScreen';
 import { getAuthToken } from './utils/authStorage';
 
 const PublicOnlyRoute = ({ children }) => {
@@ -19,16 +20,28 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  const [splashDone, setSplashDone] = useState(() => {
+    return !!sessionStorage.getItem('hs-splash-done');
+  });
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem('hs-splash-done', '1');
+    setSplashDone(true);
+  };
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
-        <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
-        <Route path="/signup" element={<PublicOnlyRoute><SignUp /></PublicOnlyRoute>} />
-        <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+    <>
+      {!splashDone && <SplashScreen onComplete={handleSplashComplete} />}
+      <Router>
+        <Routes>
+          <Route path="/" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+          <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+          <Route path="/signup" element={<PublicOnlyRoute><SignUp /></PublicOnlyRoute>} />
+          <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </>
   );
 }
 
