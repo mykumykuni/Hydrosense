@@ -83,8 +83,6 @@
   border-radius: var(--shape-panel);
   background: linear-gradient(175deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
   border: 1px solid rgba(242, 228, 208, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1598,9 +1596,9 @@
 }
 
 .modal-close-btn {
-  width: 36px;
+  min-width: 56px;
   height: 36px;
-  padding: 0;
+  padding: 0 10px;
   flex-shrink: 0;
 }
 
@@ -2017,7 +2015,7 @@
 
 
 /* =========================================================
-   NEW FEATURES — Announcement Banner
+   NEW FEATURES ï¿½ Announcement Banner
    ========================================================= */
 .announcement-banner {
   display: flex;

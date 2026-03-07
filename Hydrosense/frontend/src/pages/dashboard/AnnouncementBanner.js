@@ -31,7 +31,7 @@ const AnnouncementBanner = ({ announcement, isAdmin, onClear }) => {
   return (
     <div className="announcement-banner">
       <div className="announcement-banner-content">
-        <span className="announcement-icon">📢</span>
+
         <div className="announcement-body">
           <p className="announcement-message">{announcement.message}</p>
           {announcement.setAt && (

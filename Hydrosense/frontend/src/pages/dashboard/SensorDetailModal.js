@@ -75,7 +75,7 @@ const SensorDetailModal = ({
             <span className="mini-label">Sensor Detail</span>
             <h2>{limit.label}</h2>
           </div>
-          <button className="btn-secondary modal-close-btn" type="button" onClick={onClose}>✕</button>
+          <button className="btn-secondary modal-close-btn" type="button" onClick={onClose}>Close</button>
         </div>
 
         <div className="sensor-modal-body">

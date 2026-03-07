@@ -48,7 +48,7 @@ const OperatorDetailModal = ({ operator, onClose }) => {
             <span className="mini-label">Operator Profile</span>
             <h2 style={{ marginTop: '4px' }}>{displayName || 'Unnamed Operator'}</h2>
           </div>
-          <button className="btn-secondary modal-close-btn" type="button" onClick={onClose}>✕</button>
+          <button className="btn-secondary modal-close-btn" type="button" onClick={onClose}>Close</button>
         </div>
 
         <div className="sensor-modal-body">

@@ -37,7 +37,7 @@ const NotificationBell = ({ isAdmin, unreadCount, pendingCount, reportUnreadCoun
         onClick={() => setOpen((o) => !o)}
         aria-label="Notifications"
       >
-        🔔
+        Notif
         {totalCount > 0 && <span className="alert-count-pill">{totalCount}</span>}
       </button>
 
@@ -110,7 +110,7 @@ const DashboardTopbar = ({
             onClick={onMenuToggle}
             aria-label="Toggle sidebar"
           >
-            ☰
+            Menu
           </button>
           <h1 className="command-title">{getPageTitle(currentPage, isAdmin)}</h1>
         </div>
@@ -133,10 +133,6 @@ const DashboardTopbar = ({
           recentUnreadAlerts={recentUnreadAlerts}
           onNavigate={onNavigate}
         />
-        <button className="btn-secondary topbar-fixed alert-btn" onClick={() => setAlertModalOpen(true)}>
-          Alerts
-          {unreadCount > 0 && <span className="alert-count-pill">{unreadCount}</span>}
-        </button>
         {isAdmin && (
           <button className="btn-secondary topbar-fixed export-btn" onClick={exportAlertHistory}>
             Export Alerts
