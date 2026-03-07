@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import OperatorDetailModal from '../OperatorDetailModal';
 
 const statusTone = {
   pending: '#eabf82',
@@ -30,6 +31,8 @@ const OperatorManagementSection = ({
   error,
   loading
 }) => {
+  const [selectedOperator, setSelectedOperator] = useState(null);
+
   const handleRemove = (operator) => {
     const name = operator.profile?.displayName || operator.email;
     if (window.confirm(`Remove "${name}" permanently? This cannot be undone.`)) {
@@ -68,7 +71,12 @@ const OperatorManagementSection = ({
 
         <div className="operator-list">
           {operators.map((operator) => (
-            <article key={operator.id} className="operator-card">
+            <article
+              key={operator.id}
+              className="operator-card operator-card-clickable"
+              onClick={() => setSelectedOperator(operator)}
+              title="Click to view details"
+            >
               <div className="operator-card-avatar">
                 {operator.profile?.photoDataUrl ? (
                   <img className="operator-avatar-img" src={operator.profile.photoDataUrl} alt="avatar" />
@@ -96,7 +104,7 @@ const OperatorManagementSection = ({
                     {operator.status}
                   </span>
                 </div>
-                <div className="operator-card-actions">
+                <div className="operator-card-actions" onClick={(e) => e.stopPropagation()}>
                   {operator.status === 'pending' && (
                     <>
                       <button className="btn-secondary" onClick={() => onApprove(operator.id)}>
@@ -132,6 +140,13 @@ const OperatorManagementSection = ({
           <p className="water-level-meta">No operators found.</p>
         )}
       </article>
+
+      {selectedOperator && (
+        <OperatorDetailModal
+          operator={selectedOperator}
+          onClose={() => setSelectedOperator(null)}
+        />
+      )}
     </section>
   );
 };
